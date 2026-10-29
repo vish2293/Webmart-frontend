@@ -24,6 +24,7 @@ const ManageProductsPage = lazy(() => import('@/features/admin/pages/ManageProdu
 const ManageUsersPage = lazy(() => import('@/features/admin/pages/ManageUsersPage'));
 const AdminOrdersPage = lazy(() => import('@/features/admin/pages/AdminOrdersPage'));
 const SalesReportsPage = lazy(() => import('@/features/admin/pages/SalesReportsPage'));
+const WishlistPage = lazy(() => import('@/features/wishlist/pages/WishlistPage'));
 const PlusPage = lazy(() => import('@/features/membership/pages/PlusPage'));
 const ManageMembershipsPage = lazy(() => import('@/features/admin/pages/ManageMembershipsPage'));
 const PolicyPage = lazy(() => import('@/features/policies/pages/PolicyPage'));
@@ -54,6 +55,7 @@ export const router = createBrowserRouter(
             { path: 'checkout/shipping', element: <ShippingPage /> },
             { path: 'checkout/payment', element: <PaymentPage /> },
             { path: 'checkout/review', element: <PlaceOrderPage /> },
+            { path: 'wishlist', element: <WishlistPage /> },
             { path: 'orders', element: <OrderHistoryPage /> },
             { path: 'orders/:orderId', element: <OrderDetailPage /> },
           ],

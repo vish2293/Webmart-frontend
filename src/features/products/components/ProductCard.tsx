@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Star } from 'lucide-react';
 import { ImageWithFallback } from '@/components/ui/ImageWithFallback';
+import { WishlistButton } from '@/features/wishlist';
 import { formatCurrency, formatCurrencyWhole } from '@/utils/formatCurrency';
 import type { Product } from '../types';
 import { AddToCartControl } from './AddToCartControl';
@@ -29,7 +30,7 @@ export function ProductCard({ product }: { product: Product }) {
   const detailPath = `/products/${product._id}`;
 
   return (
-    <article className="group flex flex-col overflow-hidden rounded-xl border border-line bg-white transition-colors hover:border-zinc-300">
+    <article className="group relative flex flex-col overflow-hidden rounded-xl border border-line bg-white transition-colors hover:border-zinc-300">
       <Link to={detailPath} tabIndex={-1} aria-hidden className="relative block bg-mist">
         <ImageWithFallback
           src={product.imageUrl}
@@ -38,6 +39,7 @@ export function ProductCard({ product }: { product: Product }) {
         />
         <StockBadge countInStock={product.countInStock} />
       </Link>
+      <WishlistButton product={product} />
 
       <div className="flex flex-1 flex-col p-4">
         <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug text-ink">

@@ -5,6 +5,7 @@ import { ButtonLink } from '@/components/ui/ButtonLink';
 import { ImageWithFallback } from '@/components/ui/ImageWithFallback';
 import { ApiError, getErrorMessage } from '@/lib/httpClient';
 import { formatCurrency } from '@/utils/formatCurrency';
+import { WishlistButton } from '@/features/wishlist';
 import { ReviewsSection } from '@/features/reviews';
 import { ProductGrid } from '../components/ProductGrid';
 import { RatingStars } from '../components/RatingStars';
@@ -106,6 +107,7 @@ function ProductDetail({ product }: { product: Product }) {
             <StockStatus countInStock={product.countInStock} />
             <div className="mt-4 flex flex-wrap gap-2.5">
               <AddToCartControl product={product} className="sm:w-56" />
+              <WishlistButton product={product} variant="inline" />
               <ButtonLink to="/cart" size="lg" variant="secondary">
                 Go to cart
               </ButtonLink>
