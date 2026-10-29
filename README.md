@@ -1,4 +1,4 @@
-# IndiaKart — Client
+# WebMart — Client
 
 React 18 + TypeScript (strict) + Vite + Tailwind. Follows
 [`reactcodingstandard.md`](./reactcodingstandard.md). Talks to the API in [`../server`](../server).
