@@ -6,12 +6,15 @@ export class ApiError extends Error {
   readonly status: number;
   /** Stable server error code, e.g. `INSUFFICIENT_STOCK`. */
   readonly code?: string;
+  /** Server-provided context; untrusted shape, so feature code must validate it. */
+  readonly details?: unknown;
 
-  constructor(message: string, status: number, code?: string) {
+  constructor(message: string, status: number, code?: string, details?: unknown) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
     this.code = code;
+    this.details = details;
   }
 }
 
@@ -44,6 +47,10 @@ function readCode(data: unknown): string | undefined {
     return data.code;
   }
   return undefined;
+}
+
+function readDetails(data: unknown): unknown {
+  return data && typeof data === 'object' && 'details' in data ? data.details : undefined;
 }
 
 async function request<T>(
@@ -80,6 +87,7 @@ async function request<T>(
       readMessage(data) ?? `Request failed (${response.status})`,
       response.status,
       readCode(data),
+      readDetails(data),
     );
   }
 

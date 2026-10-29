@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import {
   BarChart2,
   ChevronRight,
+  Crown,
   Package,
   ShoppingBag,
   Users,
@@ -15,6 +16,12 @@ const adminSections: { to: string; title: string; description: string; Icon: Luc
     title: 'Orders',
     description: 'Confirm payments and mark orders as delivered.',
     Icon: ShoppingBag,
+  },
+  {
+    to: '/admin/memberships',
+    title: 'Memberships',
+    description: 'See Plus members and refund memberships.',
+    Icon: Crown,
   },
   {
     to: '/admin/products',

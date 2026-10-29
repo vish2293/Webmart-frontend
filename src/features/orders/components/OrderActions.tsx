@@ -46,9 +46,10 @@ function dialogCopy(action: ConfirmableAction, order: Order, isAdmin: boolean) {
     case 'refund':
       return {
         title: `Refund ${total}?`,
-        description: order.isShipped
-          ? 'The customer gets the full amount and any points they used back; points earned on this order are removed. Items are not restocked.'
-          : 'The order is cancelled, items go back into stock, and the full amount is refunded.',
+        description:
+          order.isShipped || order.isDelivered
+            ? 'The customer gets the full amount and any points they used back; points earned on this order are removed. Items are not restocked.'
+            : 'The order is cancelled, items go back into stock, and the full amount is refunded.',
         confirmLabel: 'Refund',
         confirmVariant: 'danger' as const,
       };

@@ -54,6 +54,11 @@ export function OrdersTable({ orders, showCustomer = false, renderActions }: Ord
             <tr key={order._id} className="hover:bg-mist/60">
               <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-graphite">
                 #{order._id.slice(-8)}
+                {order.deliveryOption === 'express' && (
+                  <span className="ml-2 rounded-full bg-brand-400 px-2 py-0.5 font-sans text-[11px] font-semibold text-ink">
+                    Express
+                  </span>
+                )}
               </td>
               {showCustomer && (
                 <td className="whitespace-nowrap px-4 py-3">{customerName(order)}</td>

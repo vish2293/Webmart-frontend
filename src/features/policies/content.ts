@@ -13,7 +13,17 @@ export type Policy = { title: string; summary: string; sections: PolicySection[]
 const paymentWindowMinutes = 30;
 const flatShipping = formatCurrency(pricingRules.flatShippingPrice);
 const freeShippingOver = formatCurrency(pricingRules.freeShippingThreshold);
+const expressFee = formatCurrency(pricingRules.expressDeliveryPrice);
 const taxPercent = `${pricingRules.taxRate * 100}%`;
+
+/** Must match server/src/modules/memberships/memberships.config.ts. */
+const plus = {
+  monthly: formatCurrency(199),
+  yearly: formatCurrency(1499),
+  welcomePoints: 100,
+  pointsMultiplier: 2,
+  refundDays: 7,
+};
 
 /** Must match server/src/modules/rewards/rewards.config.ts. */
 const rewards = {
@@ -172,6 +182,7 @@ export const policies: Record<PolicySlug, Policy> = {
           'When you cancel a prepaid order, or we approve a refund, the money is sent back to the original payment method automatically. Banks usually take 5 to 7 business days to show the credit. You can follow the refund status on the order page.',
           'Refunds include the full amount you paid, and any reward points used on the order are returned to your account.',
           'Cash-on-delivery orders are refunded by bank transfer or UPI to an account you provide.',
+          'The express delivery fee is part of the order total and is refunded with the order when you cancel before shipping.',
           'If a payment completes after your order was cancelled and the order cannot be restored, the full amount is refunded automatically to the original payment method. If you are ever charged twice for the same order, the extra payment is refunded automatically.',
         ],
       },
@@ -198,6 +209,14 @@ export const policies: Record<PolicySlug, Policy> = {
         heading: 'Shipping charges',
         paragraphs: [
           `Shipping is free on orders over ${freeShippingOver}. A flat fee of ${flatShipping} applies to smaller orders. The exact charge is shown at checkout before you pay.`,
+          'Plus members always get free shipping.',
+        ],
+      },
+      {
+        heading: 'Express delivery',
+        paragraphs: [
+          `Choose express delivery at checkout for an extra ${expressFee} and a delivery estimate of 1 to 2 business days after dispatch (standard is ${pricingRules.standardDeliveryDays} days or less). Express is free for Plus members.`,
+          'Express delivery is a faster service, not a guarantee against courier delays. If your express order arrives later than the estimate, contact us and we will refund the express fee.',
         ],
       },
       {
@@ -218,6 +237,38 @@ export const policies: Record<PolicySlug, Policy> = {
         paragraphs: [
           'Weather, holidays or courier issues can occasionally delay delivery; we will keep you informed.',
           'Please make sure your address and phone number are correct. If delivery fails after repeated attempts, the order is returned to us and refunded minus shipping charges.',
+        ],
+      },
+    ],
+  },
+  membership: {
+    title: policyTitles.membership,
+    summary: 'What Plus includes, what it costs and how to cancel.',
+    sections: [
+      {
+        heading: 'What you get',
+        paragraphs: [
+          `Plus members get free shipping on every order, free express delivery, ${plus.pointsMultiplier}x reward points on every order and ${plus.welcomePoints} welcome points when they join.`,
+        ],
+      },
+      {
+        heading: 'Price and duration',
+        paragraphs: [
+          `Plus costs ${plus.monthly} for 30 days or ${plus.yearly} for 365 days, paid through Razorpay. Memberships are prepaid for a fixed period and do not renew automatically.`,
+          'You can buy again in the last 7 days of your membership; the new period starts when the current one ends.',
+        ],
+      },
+      {
+        heading: 'Cancelling and refunds',
+        paragraphs: [
+          `You can cancel within ${plus.refundDays} days of paying for a full refund, as long as no order has used your Plus benefits yet. The refund goes back to the original payment method, and your Plus benefits and welcome points end immediately.`,
+          'After that, or once an order has used the benefits, the membership cannot be refunded but stays active until it ends.',
+        ],
+      },
+      {
+        heading: 'Changes',
+        paragraphs: [
+          'We may change Plus prices or benefits in the future. Changes apply to new purchases and renewals; your current period stays as you bought it.',
         ],
       },
     ],

@@ -5,6 +5,7 @@ export const policyTitles = {
   privacy: 'Privacy Policy',
   refunds: 'Refund & Cancellation Policy',
   shipping: 'Shipping & Delivery Policy',
+  membership: 'Plus Membership Terms',
 } as const;
 
 export type PolicySlug = keyof typeof policyTitles;

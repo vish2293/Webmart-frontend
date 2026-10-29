@@ -14,6 +14,7 @@ import { OrderSection } from '../components/OrderSection';
 import { PaymentDetails } from '../components/PaymentDetails';
 import { CancelledBadge, RefundedBadge, StatusBadge } from '../components/StatusBadge';
 import { formatCurrency } from '@/utils/formatCurrency';
+import { formatDate } from '@/utils/formatDate';
 import { useOrder, useRazorpayPayment } from '../hooks/useOrders';
 import type { CancelReason, CheckoutOutcome, Order } from '../types';
 
@@ -159,6 +160,14 @@ function OrderDetail({ order }: { order: Order }) {
             <p className="mb-2 text-graphite">
               {address}, {city}, {postalCode}, {country}
             </p>
+            <p className="mb-2 text-graphite">
+              {order.deliveryOption === 'express' ? 'Express delivery' : 'Standard delivery'}
+              {order.estimatedDeliveryDate &&
+                !order.isDelivered &&
+                !isCancelled &&
+                ` · expected by ${formatDate(order.estimatedDeliveryDate)}`}
+              {order.memberBenefitsApplied && ' · Plus benefits applied'}
+            </p>
             <StatusBadge
               isDone={order.isDelivered || order.isShipped === true}
               doneLabel={order.isDelivered ? 'Delivered on' : 'Shipped on'}
@@ -214,6 +223,8 @@ function OrderDetail({ order }: { order: Order }) {
         <PriceSummary
           itemsPrice={itemsPrice}
           shippingPrice={order.shippingPrice}
+          expressDeliveryPrice={order.expressDeliveryPrice}
+          memberSavings={order.memberSavings}
           taxPrice={order.taxPrice}
           totalPrice={order.totalPrice}
           firstOrderDiscount={order.firstOrderDiscount}

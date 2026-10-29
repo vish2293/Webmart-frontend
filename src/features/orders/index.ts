@@ -11,5 +11,6 @@ export { OrdersTable } from './components/OrdersTable';
 export { getOrderActions } from './utils/orderActions';
 export { OrderItemsList } from './components/OrderItemsList';
 export { OrderSection } from './components/OrderSection';
-export { paymentMethods } from './types';
-export type { Order, OrderPricing, PaymentMethod, ShippingAddress } from './types';
+export { openRazorpayCheckout } from './api/razorpayCheckout';
+export { deliveryOptions, paymentMethods } from './types';
+export type { DeliveryOption, Order, OrderPricing, PaymentMethod, ShippingAddress } from './types';

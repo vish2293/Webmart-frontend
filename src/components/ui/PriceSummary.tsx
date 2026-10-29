@@ -4,6 +4,9 @@ import { formatCurrency } from '@/utils/formatCurrency';
 type PriceSummaryProps = {
   itemsPrice: number;
   shippingPrice: number;
+  expressDeliveryPrice?: number;
+  /** Shipping and express fees Plus waived; shown as a note when greater than zero. */
+  memberSavings?: number;
   taxPrice: number;
   totalPrice: number;
   /** Discount lines render only when greater than zero. */
@@ -26,6 +29,8 @@ function DiscountLine({ label, amount }: { label: string; amount: number }) {
 export function PriceSummary({
   itemsPrice,
   shippingPrice,
+  expressDeliveryPrice = 0,
+  memberSavings = 0,
   taxPrice,
   totalPrice,
   firstOrderDiscount = 0,
@@ -53,6 +58,12 @@ export function PriceSummary({
             {shippingPrice === 0 ? 'Free' : formatCurrency(shippingPrice)}
           </dd>
         </div>
+        {expressDeliveryPrice > 0 && (
+          <div className="flex justify-between">
+            <dt className="text-graphite">Express delivery</dt>
+            <dd className="font-medium tabular-nums">{formatCurrency(expressDeliveryPrice)}</dd>
+          </div>
+        )}
         <div className="flex justify-between">
           <dt className="text-graphite">Tax</dt>
           <dd className="font-medium tabular-nums">{formatCurrency(taxPrice)}</dd>
@@ -62,6 +73,11 @@ export function PriceSummary({
           <dd className="text-lg font-bold tabular-nums">{formatCurrency(totalPrice)}</dd>
         </div>
       </dl>
+      {memberSavings > 0 && (
+        <p className="mt-3 rounded-lg bg-brand-50 px-3 py-2 text-[13px] text-ink">
+          Plus saved you {formatCurrency(memberSavings)} on delivery.
+        </p>
+      )}
       {children && <div className="mt-5 space-y-2.5">{children}</div>}
     </section>
   );

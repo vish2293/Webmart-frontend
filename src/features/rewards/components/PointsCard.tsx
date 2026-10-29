@@ -13,7 +13,11 @@ const historyLabels: Record<PointsTransactionType, string> = {
   redeem_return: 'Returned',
   revive_redeem: 'Used',
   revive_return: 'Returned',
+  membership_bonus: 'Plus welcome bonus',
+  membership_bonus_revoke: 'Plus bonus removed (refund)',
 };
+
+const isMembershipEntry = (type: PointsTransactionType) => type.startsWith('membership_');
 
 const visibleHistory = 10;
 
@@ -40,8 +44,8 @@ export function PointsCard() {
             <span className="ml-2 text-sm font-medium text-graphite">points · 1 point = ₹1</span>
           </p>
           <p className="mt-1 text-sm text-graphite">
-            Earn 1 point for every ₹100 you spend, once your order is delivered. Use them at
-            checkout for up to 20% off.
+            Earn 1 point for every ₹100 you spend (2 with Plus), once your order is delivered. Use
+            them at checkout for up to 20% off.
           </p>
           {rewards.data.isFirstOrderEligible && (
             <p className="mt-3 flex items-start gap-2 rounded-lg bg-brand-50 p-3 text-sm text-ink">
@@ -60,13 +64,19 @@ export function PointsCard() {
                     className="flex items-center justify-between py-2"
                   >
                     <span>
-                      {historyLabels[entry.type]} ·{' '}
-                      <Link
-                        to={`/orders/${entry.order}`}
-                        className="text-graphite underline underline-offset-2"
-                      >
-                        order #{entry.order.slice(-8)}
-                      </Link>
+                      {historyLabels[entry.type]}
+                      {!isMembershipEntry(entry.type) && (
+                        <>
+                          {' '}
+                          ·{' '}
+                          <Link
+                            to={`/orders/${entry.order}`}
+                            className="text-graphite underline underline-offset-2"
+                          >
+                            order #{entry.order.slice(-8)}
+                          </Link>
+                        </>
+                      )}
                       <span className="ml-2 text-graphite">{formatDate(entry.createdAt)}</span>
                     </span>
                     <span

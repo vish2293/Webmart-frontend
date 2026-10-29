@@ -1,6 +1,15 @@
 import { useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { CheckCircle2, CreditCard, Loader2, Lock, MapPin, Pencil, ShoppingBag } from 'lucide-react';
+import {
+  CheckCircle2,
+  CreditCard,
+  Loader2,
+  Lock,
+  MapPin,
+  Pencil,
+  ShoppingBag,
+  Truck,
+} from 'lucide-react';
 import { Alert } from '@/components/feedback/Alert';
 import { Button } from '@/components/ui/Button';
 import { PriceSummary } from '@/components/ui/PriceSummary';
@@ -13,15 +22,20 @@ import {
   useOrderQuote,
   useRazorpayPayment,
   type CheckoutOutcome,
+  type DeliveryOption,
   type OrderPricing,
 } from '@/features/orders';
+import { PlusNudge } from '@/features/membership';
 import { useRewards } from '@/features/rewards';
 import { policyPath } from '@/features/policies/links';
 import { getErrorMessage } from '@/lib/httpClient';
 import { formatCurrency } from '@/utils/formatCurrency';
 import { CheckoutSteps } from '../components/CheckoutSteps';
+import { StockConflictNotice } from '../components/StockConflictNotice';
+import { DeliveryOptions } from '../components/DeliveryOptions';
 import { PointsRedeemer } from '../components/PointsRedeemer';
 import { useFreshCart } from '../hooks/useFreshCart';
+import { readStockConflict } from '../utils/stockConflict';
 import { clearCheckout, getPaymentMethod, getShippingAddress } from '../utils/checkoutStorage';
 
 /** Shown while the Razorpay window is open, so the page behind it isn't blank. */
@@ -62,12 +76,14 @@ export default function PlaceOrderPage() {
   const { isChecking, notices } = useFreshCart();
   const rewards = useRewards({ enabled: Boolean(user) });
   const [isUsingPoints, setIsUsingPoints] = useState(false);
+  const [deliveryOption, setDeliveryOption] = useState<DeliveryOption>('standard');
 
   // Ask for the whole balance; the server caps it to what this order allows and the quote says
   // exactly how many points will be used.
   const quoteInput = {
     orderItems: items.map((item) => ({ product: item.productId, qty: item.quantity })),
     pointsToRedeem: isUsingPoints ? (rewards.data?.pointsBalance ?? 0) : 0,
+    deliveryOption,
   };
   const quote = useOrderQuote(quoteInput, { enabled: items.length > 0 && !isChecking });
   const isQuoteCurrent = quote.isSuccess && !quote.isFetching;
@@ -79,6 +95,7 @@ export default function PlaceOrderPage() {
     shippingAddress,
     paymentMethod,
     quoteInput.pointsToRedeem,
+    deliveryOption,
   ]);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- new key whenever the order changes
   const idempotencyKey = useMemo(() => crypto.randomUUID(), [orderSignature]);
@@ -87,13 +104,32 @@ export default function PlaceOrderPage() {
   if (createOrder.isSuccess) {
     return <PaymentInProgress orderNumber={createOrder.data._id.slice(-8)} />;
   }
-  if (items.length === 0) return <Navigate to="/cart" replace />;
+  // Lost a race for the last units: the failed order refetches stock and the cart drops what
+  // sold out. Explain that here instead of silently bouncing an emptied cart to /cart.
+  const stockConflict = readStockConflict(createOrder.error);
+  if (items.length === 0) {
+    // Mid-request the cart can empty before the result lands; wait for it rather than redirect.
+    if (createOrder.isPending) return null;
+    if (!stockConflict) return <Navigate to="/cart" replace />;
+    return (
+      <>
+        <CheckoutSteps current="Review" />
+        <div className="container pt-8">
+          <StockConflictNotice shortages={stockConflict} isCartEmpty />
+        </div>
+      </>
+    );
+  }
   if (!shippingAddress) return <Navigate to="/checkout/shipping" replace />;
   if (!paymentMethod) return <Navigate to="/checkout/payment" replace />;
 
   // Until the first quote arrives, show the cart's pre-discount numbers (button stays disabled).
   const pricing: OrderPricing = quote.data ?? {
     ...calculateOrderPricing(items),
+    expressDeliveryPrice: 0,
+    memberSavings: 0,
+    memberBenefitsApplied: false,
+    pointsMultiplier: 1,
     firstOrderDiscount: 0,
     pointsRedeemed: 0,
     pointsDiscount: 0,
@@ -129,6 +165,7 @@ export default function PlaceOrderPage() {
           orderItems: quoteInput.orderItems,
           shippingAddress,
           paymentMethod,
+          deliveryOption,
           pointsToRedeem: pricing.pointsRedeemed,
           // The server rejects the order if its total differs from the quote shown here.
           totalPrice: pricing.totalPrice,
@@ -151,17 +188,21 @@ export default function PlaceOrderPage() {
     <>
       <CheckoutSteps current="Review" />
       <div className="container pt-8">
-        {createOrder.isError && (
-          <Alert variant="error" className="mb-6">
-            {getErrorMessage(createOrder.error, 'Failed to place order. Please try again.')}
-          </Alert>
+        {stockConflict ? (
+          <StockConflictNotice shortages={stockConflict} isCartEmpty={false} />
+        ) : (
+          createOrder.isError && (
+            <Alert variant="error" className="mb-6">
+              {getErrorMessage(createOrder.error, 'Failed to place order. Please try again.')}
+            </Alert>
+          )
         )}
         {quote.isError && (
           <Alert variant="error" className="mb-6">
             {getErrorMessage(quote.error, 'Could not calculate your total. Please try again.')}
           </Alert>
         )}
-        {notices.length > 0 && (
+        {notices.length > 0 && !stockConflict && (
           <Alert variant="error" className="mb-6">
             <p className="font-semibold">Your cart was updated. Please review before ordering:</p>
             <ul className="mt-1 list-disc pl-5">
@@ -183,6 +224,18 @@ export default function PlaceOrderPage() {
                 {shippingAddress.country}
               </p>
               <EditLink to="/checkout/shipping" label="Edit shipping address" />
+            </OrderSection>
+
+            <OrderSection
+              icon={<Truck size={18} className="text-ink" aria-hidden />}
+              title="Delivery"
+            >
+              <DeliveryOptions
+                value={deliveryOption}
+                onChange={setDeliveryOption}
+                isMember={pricing.memberBenefitsApplied}
+                disabled={createOrder.isPending}
+              />
             </OrderSection>
 
             <OrderSection
@@ -210,6 +263,11 @@ export default function PlaceOrderPage() {
           </div>
 
           <PriceSummary {...pricing}>
+            {quote.data && !pricing.memberBenefitsApplied && (
+              <PlusNudge>
+                Join Plus: free shipping, free express delivery and 2× points on every order.
+              </PlusNudge>
+            )}
             {rewards.data && (
               <PointsRedeemer
                 balance={rewards.data.pointsBalance}

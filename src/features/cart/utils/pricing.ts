@@ -1,11 +1,14 @@
 import type { CartItem, OrderPricing } from '../types';
 
 // ponytail: pricing rules live client-side because the server trusts submitted prices.
-// The server must recalculate these before this goes live (see server TODO).
+// Keep in sync with server/src/modules/orders/order-pricing.ts; the server's quote is what's charged.
 export const pricingRules = {
   taxRate: 0.08,
   flatShippingPrice: 10,
   freeShippingThreshold: 100,
+  expressDeliveryPrice: 49,
+  standardDeliveryDays: 7,
+  expressDeliveryDays: 2,
 } as const;
 
 const roundMoney = (amount: number) => Math.round(amount * 100) / 100;

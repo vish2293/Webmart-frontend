@@ -9,7 +9,8 @@ export type OrderViewer = { isAdmin: boolean; isOwner: boolean };
 export function getOrderActions(order: Order, { isAdmin, isOwner }: OrderViewer) {
   const isOpen = !order.isCancelled && !order.refundedAt;
   const isCashOnDelivery = order.paymentMethod === 'Cash on Delivery';
-  const isShipped = order.isShipped === true;
+  // Orders delivered before the shipped step existed have no isShipped.
+  const isShipped = order.isShipped === true || order.isDelivered;
 
   return {
     canCancel: (isOwner || isAdmin) && isOpen && !isShipped,

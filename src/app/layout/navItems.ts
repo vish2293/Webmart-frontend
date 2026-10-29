@@ -1,4 +1,4 @@
-import { Home, ListOrdered, Settings, Store, type LucideIcon } from 'lucide-react';
+import { Crown, Home, ListOrdered, Settings, Store, type LucideIcon } from 'lucide-react';
 
 export type NavItem = {
   to: string;
@@ -10,6 +10,7 @@ export type NavItem = {
 export const navItems: NavItem[] = [
   { to: '/', label: 'Home', Icon: Home, access: 'public' },
   { to: '/products', label: 'Shop', Icon: Store, access: 'public' },
+  { to: '/plus', label: 'Plus', Icon: Crown, access: 'public' },
   { to: '/orders', label: 'Orders', Icon: ListOrdered, access: 'user' },
   { to: '/admin', label: 'Admin', Icon: Settings, access: 'admin' },
 ];

@@ -99,8 +99,12 @@ export function useCreateOrder() {
     mutationFn: ordersApi.createOrder,
     onSuccess: (order) => queryClient.setQueryData(orderKeys.detail(order._id), order),
     // Either way stock, prices or points may have changed (e.g. PRICE_CHANGED): refresh the
-    // cart, the quote and the points balance.
-    onSettled: () => invalidateAfterOrderChange(queryClient),
+    // cart, the quote and the points balance. Not returned: the mutation would wait for the
+    // refetch before reporting its error, and by then the refreshed cart may already have
+    // dropped the sold-out item, so checkout would lose the reason the order failed.
+    onSettled: () => {
+      void invalidateAfterOrderChange(queryClient);
+    },
   });
 }
 

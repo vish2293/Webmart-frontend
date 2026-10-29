@@ -4,6 +4,7 @@ import { EmptyState } from '@/components/feedback/EmptyState';
 import { ButtonLink } from '@/components/ui/ButtonLink';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { PageHeading } from '@/components/ui/PageHeading';
+import { PlusNudge } from '@/features/membership';
 import { PriceSummary } from '@/components/ui/PriceSummary';
 import { CartLineItem } from '../components/CartLineItem';
 import { useCart } from '../hooks/useCart';
@@ -68,6 +69,7 @@ export default function CartPage() {
               Add {formatCurrency(amountToFreeShipping)} more for free shipping.
             </p>
           )}
+          <PlusNudge>Join Plus: free shipping, free express delivery and 2× points.</PlusNudge>
           <ButtonLink to="/checkout/shipping" className="w-full">
             Check out
           </ButtonLink>

@@ -8,6 +8,9 @@ export type ShippingAddress = {
 export const paymentMethods = ['UPI', 'Card', 'Cash on Delivery'] as const;
 export type PaymentMethod = (typeof paymentMethods)[number];
 
+export const deliveryOptions = ['standard', 'express'] as const;
+export type DeliveryOption = (typeof deliveryOptions)[number];
+
 export type OrderItem = {
   product: string;
   name: string;
@@ -31,6 +34,14 @@ export type Order = {
   pointsEarned?: number;
   taxPrice: number;
   shippingPrice: number;
+  /** Orders placed before express delivery existed have none of these fields. */
+  deliveryOption?: DeliveryOption;
+  expressDeliveryPrice?: number;
+  /** Plus benefits were applied; `memberSavings` is the shipping/express fees waived. */
+  memberBenefitsApplied?: boolean;
+  memberSavings?: number;
+  pointsMultiplier?: number;
+  estimatedDeliveryDate?: string;
   totalPrice: number;
   isPaid: boolean;
   paidAt?: string;
@@ -71,6 +82,10 @@ export type RefundRecord = {
 export type OrderPricing = {
   itemsPrice: number;
   shippingPrice: number;
+  expressDeliveryPrice: number;
+  memberSavings: number;
+  memberBenefitsApplied: boolean;
+  pointsMultiplier: number;
   firstOrderDiscount: number;
   pointsRedeemed: number;
   pointsDiscount: number;
@@ -83,6 +98,7 @@ export type OrderPricing = {
 export type QuoteOrderInput = {
   orderItems: { product: string; qty: number }[];
   pointsToRedeem: number;
+  deliveryOption: DeliveryOption;
 };
 
 /** Returned by POST /orders/:id/razorpay; `amount` is in paise. */
@@ -100,6 +116,7 @@ export type CreateOrderInput = {
   orderItems: { product: string; qty: number }[];
   shippingAddress: ShippingAddress;
   paymentMethod: PaymentMethod;
+  deliveryOption: DeliveryOption;
   pointsToRedeem: number;
   totalPrice: number;
 };
