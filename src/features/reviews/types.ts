@@ -5,6 +5,8 @@ export type Review = {
   comment?: string;
   /** First name and last initial, e.g. "Asha R.". */
   authorName: string;
+  /** A sample review (development data), not from a customer. */
+  isDemo: boolean;
   createdAt: string;
   updatedAt: string;
 };

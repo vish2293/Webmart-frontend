@@ -98,7 +98,7 @@ export function ReviewsSection({ productId, average }: { productId: string; aver
                     <p className="mt-2 text-xs text-graphite">
                       {review.authorName} · {formatDate(review.createdAt)}
                       <span className="ml-2 rounded-full bg-mist px-2 py-0.5 text-[11px] font-medium text-ink">
-                        Verified purchase
+                        {review.isDemo ? 'Sample review' : 'Verified purchase'}
                       </span>
                     </p>
                   </li>
