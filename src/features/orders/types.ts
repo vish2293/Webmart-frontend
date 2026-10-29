@@ -24,17 +24,65 @@ export type Order = {
   shippingAddress: ShippingAddress;
   paymentMethod: PaymentMethod;
   itemsPrice?: number;
+  firstOrderDiscount?: number;
+  pointsRedeemed?: number;
+  pointsDiscount?: number;
+  /** Points credited once the order was paid and delivered. */
+  pointsEarned?: number;
   taxPrice: number;
   shippingPrice: number;
   totalPrice: number;
   isPaid: boolean;
   paidAt?: string;
+  paymentResult?: { id?: string; status?: string; method?: string };
+  isShipped?: boolean;
+  shippedAt?: string;
   isDelivered: boolean;
   deliveredAt?: string;
-  /** Unpaid online orders are cancelled after the payment window; stock is released. */
+  /** Cancelled orders have their stock, points and first-order discount returned. */
   isCancelled?: boolean;
   cancelledAt?: string;
+  cancelReason?: CancelReason;
+  /** Set when an admin refunded a shipped order. */
+  refundedAt?: string;
+  refunds?: RefundRecord[];
   createdAt: string;
+};
+
+export type CancelReason = 'payment_expired' | 'customer' | 'admin';
+
+export type RefundStatus = 'pending' | 'processed' | 'failed' | 'manual_required';
+export type RefundReason =
+  'customer_cancel' | 'admin_cancel' | 'admin_refund' | 'late_payment' | 'duplicate_payment';
+
+/** `paymentId` is 'cod' for cash refunds settled outside the app. */
+export type RefundRecord = {
+  paymentId: string;
+  amount: number;
+  status: RefundStatus;
+  razorpayRefundId?: string;
+  reason: RefundReason;
+  requestedAt: string;
+  processedAt?: string;
+  failureReason?: string;
+};
+
+/** POST /orders/quote — the exact amounts the order will be charged. */
+export type OrderPricing = {
+  itemsPrice: number;
+  shippingPrice: number;
+  firstOrderDiscount: number;
+  pointsRedeemed: number;
+  pointsDiscount: number;
+  /** Most points usable on this order with the customer's balance. */
+  maxRedeemablePoints: number;
+  taxPrice: number;
+  totalPrice: number;
+};
+
+export type QuoteOrderInput = {
+  orderItems: { product: string; qty: number }[];
+  pointsToRedeem: number;
 };
 
 /** Returned by POST /orders/:id/razorpay; `amount` is in paise. */
@@ -47,13 +95,12 @@ export type RazorpayCheckoutSession = {
   expiresAt: string;
 };
 
+/** Prices aren't trusted by the server: `totalPrice` only has to match its own quote. */
 export type CreateOrderInput = {
-  orderItems: OrderItem[];
+  orderItems: { product: string; qty: number }[];
   shippingAddress: ShippingAddress;
   paymentMethod: PaymentMethod;
-  itemsPrice: number;
-  taxPrice: number;
-  shippingPrice: number;
+  pointsToRedeem: number;
   totalPrice: number;
 };
 

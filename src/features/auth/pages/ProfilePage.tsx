@@ -7,6 +7,7 @@ import { getErrorMessage } from '@/lib/httpClient';
 import type { Session } from '@/types/session';
 import * as authApi from '../api/authApi';
 import { FormCard } from '@/components/ui/FormCard';
+import { PointsCard } from '@/features/rewards';
 import { useAuth } from '../hooks/useAuth';
 import { hasErrors, validateAccountForm, type FieldErrors } from '../utils/validation';
 
@@ -23,7 +24,12 @@ export default function ProfilePage() {
   const { user } = useAuth();
   // The route guard redirects guests; this only covers the instant after logout.
   if (!user) return null;
-  return <ProfileForm currentUser={user} />;
+  return (
+    <>
+      <ProfileForm currentUser={user} />
+      <PointsCard />
+    </>
+  );
 }
 
 function ProfileForm({ currentUser }: { currentUser: Session }) {

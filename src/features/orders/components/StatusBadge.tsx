@@ -1,4 +1,4 @@
-import { CheckCircle2, Clock, XCircle } from 'lucide-react';
+import { CheckCircle2, Clock, RotateCcw, XCircle } from 'lucide-react';
 import { formatDate } from '@/utils/formatDate';
 
 type StatusBadgeProps = {
@@ -29,6 +29,16 @@ export function CancelledBadge() {
     <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-800">
       <XCircle size={13} aria-hidden />
       Cancelled
+    </span>
+  );
+}
+
+/** Money returned to the customer. */
+export function RefundedBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-mist px-2 py-0.5 text-xs font-medium text-ink">
+      <RotateCcw size={13} aria-hidden />
+      Refunded
     </span>
   );
 }

@@ -15,6 +15,14 @@ const flatShipping = formatCurrency(pricingRules.flatShippingPrice);
 const freeShippingOver = formatCurrency(pricingRules.freeShippingThreshold);
 const taxPercent = `${pricingRules.taxRate * 100}%`;
 
+/** Must match server/src/modules/rewards/rewards.config.ts. */
+const rewards = {
+  firstOrderPercent: 10,
+  firstOrderCap: formatCurrency(200),
+  rupeesPerPointEarned: formatCurrency(100),
+  maxRedeemPercent: 20,
+};
+
 export const policies: Record<PolicySlug, Policy> = {
   terms: {
     title: policyTitles.terms,
@@ -47,6 +55,15 @@ export const policies: Record<PolicySlug, Policy> = {
           'Online payments (UPI, cards, net banking and wallets) are processed securely by Razorpay. We never see or store your full card details.',
           `Online orders must be paid within ${paymentWindowMinutes} minutes of being placed. Unpaid orders are cancelled automatically after that and the items are released for other customers.`,
           'Cash on delivery is available on eligible orders; please keep the exact amount ready.',
+        ],
+      },
+      {
+        heading: 'Discounts and reward points',
+        paragraphs: [
+          `Your first order gets ${rewards.firstOrderPercent}% off the items, up to ${rewards.firstOrderCap}. It is applied automatically at checkout, once per customer. If that order is cancelled, the discount becomes available again.`,
+          `You earn 1 reward point for every full ${rewards.rupeesPerPointEarned} of an order's total, credited once the order is paid and delivered.`,
+          `At checkout, each point is worth ₹1 and points can cover up to ${rewards.maxRedeemPercent}% of the items (after any first-order discount). Discounts reduce the amount tax is charged on.`,
+          'Points have no cash value outside this store and cannot be transferred. If an order is cancelled or refunded, the points used on it are returned and points earned from it are removed.',
         ],
       },
       {
@@ -129,7 +146,8 @@ export const policies: Record<PolicySlug, Policy> = {
       {
         heading: 'Cancelling an order',
         paragraphs: [
-          `You can cancel an order free of charge before it is shipped. Contact us at ${storeInfo.email} or ${storeInfo.phone} with your order number.`,
+          'You can cancel an order free of charge before it is shipped: open it from “Your orders” and choose “Cancel order”. Any points you used are returned straight away.',
+          `If you need help, contact us at ${storeInfo.email} or ${storeInfo.phone} with your order number.`,
           `Online orders that are not paid within ${paymentWindowMinutes} minutes are cancelled automatically. You are not charged for them.`,
           'Once an order has been shipped it cannot be cancelled, but you can return it under the policy below.',
         ],
@@ -151,9 +169,10 @@ export const policies: Record<PolicySlug, Policy> = {
         heading: 'Refunds',
         paragraphs: [
           'Once we receive and inspect a returned item, we approve the refund within 2 business days.',
-          'Prepaid orders are refunded to the original payment method. Banks usually take 5 to 7 business days to show the credit.',
+          'When you cancel a prepaid order, or we approve a refund, the money is sent back to the original payment method automatically. Banks usually take 5 to 7 business days to show the credit. You can follow the refund status on the order page.',
+          'Refunds include the full amount you paid, and any reward points used on the order are returned to your account.',
           'Cash-on-delivery orders are refunded by bank transfer or UPI to an account you provide.',
-          'If a payment completes after your order was automatically cancelled and the items are no longer available, the full amount is refunded to the original payment method.',
+          'If a payment completes after your order was cancelled and the order cannot be restored, the full amount is refunded automatically to the original payment method. If you are ever charged twice for the same order, the extra payment is refunded automatically.',
         ],
       },
       {

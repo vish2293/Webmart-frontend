@@ -6,8 +6,21 @@ type PriceSummaryProps = {
   shippingPrice: number;
   taxPrice: number;
   totalPrice: number;
+  /** Discount lines render only when greater than zero. */
+  firstOrderDiscount?: number;
+  pointsDiscount?: number;
+  pointsRedeemed?: number;
   children?: ReactNode;
 };
+
+function DiscountLine({ label, amount }: { label: string; amount: number }) {
+  return (
+    <div className="flex justify-between text-green-700">
+      <dt>{label}</dt>
+      <dd className="font-medium tabular-nums">−{formatCurrency(amount)}</dd>
+    </div>
+  );
+}
 
 /** Order totals breakdown shared by cart, checkout and order detail. */
 export function PriceSummary({
@@ -15,6 +28,9 @@ export function PriceSummary({
   shippingPrice,
   taxPrice,
   totalPrice,
+  firstOrderDiscount = 0,
+  pointsDiscount = 0,
+  pointsRedeemed = 0,
   children,
 }: PriceSummaryProps) {
   return (
@@ -25,6 +41,12 @@ export function PriceSummary({
           <dt className="text-graphite">Items</dt>
           <dd className="font-medium tabular-nums">{formatCurrency(itemsPrice)}</dd>
         </div>
+        {firstOrderDiscount > 0 && (
+          <DiscountLine label="First-order discount" amount={firstOrderDiscount} />
+        )}
+        {pointsDiscount > 0 && (
+          <DiscountLine label={`Points used (${pointsRedeemed})`} amount={pointsDiscount} />
+        )}
         <div className="flex justify-between">
           <dt className="text-graphite">Shipping</dt>
           <dd className="font-medium tabular-nums">

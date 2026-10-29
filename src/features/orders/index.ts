@@ -2,11 +2,14 @@ export {
   useAllOrders,
   useCreateOrder,
   useDeliverOrder,
+  useOrderQuote,
   useRazorpayPayment,
+  useShipOrder,
 } from './hooks/useOrders';
 export type { CheckoutOutcome } from './types';
 export { OrdersTable } from './components/OrdersTable';
+export { getOrderActions } from './utils/orderActions';
 export { OrderItemsList } from './components/OrderItemsList';
 export { OrderSection } from './components/OrderSection';
 export { paymentMethods } from './types';
-export type { Order, PaymentMethod, ShippingAddress } from './types';
+export type { Order, OrderPricing, PaymentMethod, ShippingAddress } from './types';

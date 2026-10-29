@@ -1,14 +1,76 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from '@tanstack/react-query';
+import { rewardKeys } from '@/features/rewards';
 import { ApiError } from '@/lib/httpClient';
 import * as ordersApi from '../api/ordersApi';
 import { openRazorpayCheckout } from '../api/razorpayCheckout';
+import type { QuoteOrderInput } from '../types';
 
 export const orderKeys = {
   all: ['orders'] as const,
   mine: () => [...orderKeys.all, 'mine'] as const,
   admin: () => [...orderKeys.all, 'admin'] as const,
   detail: (orderId: string) => [...orderKeys.all, 'detail', orderId] as const,
+  quote: (input: QuoteOrderInput) => [...orderKeys.all, 'quote', input] as const,
 };
+
+/** Order changes can move stock and points, so refresh everything that shows them. */
+function invalidateAfterOrderChange(queryClient: QueryClient) {
+  return Promise.all([
+    queryClient.invalidateQueries({ queryKey: orderKeys.all }),
+    queryClient.invalidateQueries({ queryKey: rewardKeys.all }),
+    queryClient.invalidateQueries({ queryKey: ['products'] }),
+  ]);
+}
+
+/** The server's price for the cart right now, including discounts and points. */
+export function useOrderQuote(input: QuoteOrderInput, { enabled }: { enabled: boolean }) {
+  return useQuery({
+    queryKey: orderKeys.quote(input),
+    queryFn: () => ordersApi.quoteOrder(input),
+    enabled,
+    staleTime: 0,
+    // Keep showing the last total while a new one loads, instead of flashing empty.
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useCancelOrder() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ordersApi.cancelOrder,
+    onSettled: () => invalidateAfterOrderChange(queryClient),
+  });
+}
+
+export function useShipOrder() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ordersApi.shipOrder,
+    onSettled: () => queryClient.invalidateQueries({ queryKey: orderKeys.all }),
+  });
+}
+
+export function useRefundOrder() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ordersApi.refundOrder,
+    onSettled: () => invalidateAfterOrderChange(queryClient),
+  });
+}
+
+export function useRetryRefund() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ordersApi.retryRefund,
+    onSettled: () => queryClient.invalidateQueries({ queryKey: orderKeys.all }),
+  });
+}
 
 export function useMyOrders() {
   return useQuery({
@@ -36,8 +98,9 @@ export function useCreateOrder() {
   return useMutation({
     mutationFn: ordersApi.createOrder,
     onSuccess: (order) => queryClient.setQueryData(orderKeys.detail(order._id), order),
-    // Either way stock (and maybe prices) changed server-side; refresh what the cart shows.
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ['products'] }),
+    // Either way stock, prices or points may have changed (e.g. PRICE_CHANGED): refresh the
+    // cart, the quote and the points balance.
+    onSettled: () => invalidateAfterOrderChange(queryClient),
   });
 }
 
@@ -99,7 +162,7 @@ export function useMarkOrderPaid() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ordersApi.markOrderPaid,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: orderKeys.all }),
+    onSuccess: () => invalidateAfterOrderChange(queryClient),
   });
 }
 
@@ -107,6 +170,6 @@ export function useDeliverOrder() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ordersApi.deliverOrder,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: orderKeys.all }),
+    onSuccess: () => invalidateAfterOrderChange(queryClient),
   });
 }

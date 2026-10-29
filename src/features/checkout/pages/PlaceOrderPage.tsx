@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { CheckCircle2, CreditCard, Loader2, Lock, MapPin, Pencil, ShoppingBag } from 'lucide-react';
 import { Alert } from '@/components/feedback/Alert';
@@ -10,13 +10,17 @@ import {
   OrderItemsList,
   OrderSection,
   useCreateOrder,
+  useOrderQuote,
   useRazorpayPayment,
   type CheckoutOutcome,
+  type OrderPricing,
 } from '@/features/orders';
+import { useRewards } from '@/features/rewards';
 import { policyPath } from '@/features/policies/links';
 import { getErrorMessage } from '@/lib/httpClient';
 import { formatCurrency } from '@/utils/formatCurrency';
 import { CheckoutSteps } from '../components/CheckoutSteps';
+import { PointsRedeemer } from '../components/PointsRedeemer';
 import { useFreshCart } from '../hooks/useFreshCart';
 import { clearCheckout, getPaymentMethod, getShippingAddress } from '../utils/checkoutStorage';
 
@@ -56,6 +60,17 @@ export default function PlaceOrderPage() {
   const shippingAddress = getShippingAddress();
   const paymentMethod = getPaymentMethod();
   const { isChecking, notices } = useFreshCart();
+  const rewards = useRewards({ enabled: Boolean(user) });
+  const [isUsingPoints, setIsUsingPoints] = useState(false);
+
+  // Ask for the whole balance; the server caps it to what this order allows and the quote says
+  // exactly how many points will be used.
+  const quoteInput = {
+    orderItems: items.map((item) => ({ product: item.productId, qty: item.quantity })),
+    pointsToRedeem: isUsingPoints ? (rewards.data?.pointsBalance ?? 0) : 0,
+  };
+  const quote = useOrderQuote(quoteInput, { enabled: items.length > 0 && !isChecking });
+  const isQuoteCurrent = quote.isSuccess && !quote.isFetching;
 
   // One key per distinct order: retries of the same order reuse it (so a double click or a
   // timed-out request can't create two orders); any change to the order gets a new key.
@@ -63,6 +78,7 @@ export default function PlaceOrderPage() {
     items.map((item) => [item.productId, item.quantity, item.price]),
     shippingAddress,
     paymentMethod,
+    quoteInput.pointsToRedeem,
   ]);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- new key whenever the order changes
   const idempotencyKey = useMemo(() => crypto.randomUUID(), [orderSignature]);
@@ -75,7 +91,14 @@ export default function PlaceOrderPage() {
   if (!shippingAddress) return <Navigate to="/checkout/shipping" replace />;
   if (!paymentMethod) return <Navigate to="/checkout/payment" replace />;
 
-  const pricing = calculateOrderPricing(items);
+  // Until the first quote arrives, show the cart's pre-discount numbers (button stays disabled).
+  const pricing: OrderPricing = quote.data ?? {
+    ...calculateOrderPricing(items),
+    firstOrderDiscount: 0,
+    pointsRedeemed: 0,
+    pointsDiscount: 0,
+    maxRedeemablePoints: 0,
+  };
   const isOnlinePayment = paymentMethod !== 'Cash on Delivery';
 
   const showOrder = (orderId: string, outcome: CheckoutOutcome) =>
@@ -103,17 +126,12 @@ export default function PlaceOrderPage() {
       {
         idempotencyKey,
         input: {
-          orderItems: items.map((item) => ({
-            product: item.productId,
-            name: item.name,
-            qty: item.quantity,
-            image: item.imageUrl,
-            price: item.price,
-          })),
+          orderItems: quoteInput.orderItems,
           shippingAddress,
           paymentMethod,
-          // The server rejects the order if its total differs from what the customer sees.
-          ...pricing,
+          pointsToRedeem: pricing.pointsRedeemed,
+          // The server rejects the order if its total differs from the quote shown here.
+          totalPrice: pricing.totalPrice,
         },
       },
       {
@@ -136,6 +154,11 @@ export default function PlaceOrderPage() {
         {createOrder.isError && (
           <Alert variant="error" className="mb-6">
             {getErrorMessage(createOrder.error, 'Failed to place order. Please try again.')}
+          </Alert>
+        )}
+        {quote.isError && (
+          <Alert variant="error" className="mb-6">
+            {getErrorMessage(quote.error, 'Could not calculate your total. Please try again.')}
           </Alert>
         )}
         {notices.length > 0 && (
@@ -187,11 +210,20 @@ export default function PlaceOrderPage() {
           </div>
 
           <PriceSummary {...pricing}>
+            {rewards.data && (
+              <PointsRedeemer
+                balance={rewards.data.pointsBalance}
+                maxRedeemable={quote.data?.maxRedeemablePoints ?? 0}
+                isUsingPoints={isUsingPoints}
+                onChange={setIsUsingPoints}
+                disabled={createOrder.isPending}
+              />
+            )}
             <Button
               className="w-full"
               isLoading={createOrder.isPending}
               // Never submit prices or quantities the catalogue hasn't just confirmed.
-              disabled={isChecking}
+              disabled={isChecking || !isQuoteCurrent}
               onClick={handlePlaceOrder}
               icon={
                 isOnlinePayment ? (
@@ -203,7 +235,7 @@ export default function PlaceOrderPage() {
             >
               {createOrder.isPending
                 ? 'Placing order…'
-                : isChecking
+                : isChecking || !isQuoteCurrent
                   ? 'Checking prices and stock…'
                   : isOnlinePayment
                     ? `Pay ${formatCurrency(pricing.totalPrice)}`

@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { formatCurrency } from '@/utils/formatCurrency';
 import { formatDate } from '@/utils/formatDate';
 import type { Order } from '../types';
-import { CancelledBadge, StatusBadge } from './StatusBadge';
+import { isOrderRefunded } from '../utils/orderActions';
+import { CancelledBadge, RefundedBadge, StatusBadge } from './StatusBadge';
 
 type OrdersTableProps = {
   orders: Order[];
@@ -62,7 +63,9 @@ export function OrdersTable({ orders, showCustomer = false, renderActions }: Ord
                 {formatCurrency(order.totalPrice)}
               </td>
               <td className="whitespace-nowrap px-4 py-3">
-                {order.isCancelled ? (
+                {isOrderRefunded(order) ? (
+                  <RefundedBadge />
+                ) : order.isCancelled ? (
                   <CancelledBadge />
                 ) : (
                   <StatusBadge isDone={order.isPaid} doneLabel="Paid" pendingLabel="Unpaid" />
@@ -70,8 +73,8 @@ export function OrdersTable({ orders, showCustomer = false, renderActions }: Ord
               </td>
               <td className="whitespace-nowrap px-4 py-3">
                 <StatusBadge
-                  isDone={order.isDelivered}
-                  doneLabel="Delivered"
+                  isDone={order.isDelivered || order.isShipped === true}
+                  doneLabel={order.isDelivered ? 'Delivered' : 'Shipped'}
                   pendingLabel="Pending"
                 />
               </td>

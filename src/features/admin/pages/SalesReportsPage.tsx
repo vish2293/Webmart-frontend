@@ -9,7 +9,8 @@ import { useUsers } from '../hooks/useUsers';
 function summarizeOrders(allOrders: Order[]) {
   // Expired orders never happened commercially; their stock was released.
   const orders = allOrders.filter((order) => !order.isCancelled);
-  const paidOrders = orders.filter((order) => order.isPaid);
+  // Refunded money isn't revenue.
+  const paidOrders = orders.filter((order) => order.isPaid && !order.refundedAt);
   return {
     totalOrders: orders.length,
     paidRevenue: paidOrders.reduce((sum, order) => sum + order.totalPrice, 0),

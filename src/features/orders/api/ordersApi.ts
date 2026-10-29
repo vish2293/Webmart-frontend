@@ -1,5 +1,12 @@
 import { httpClient } from '@/lib/httpClient';
-import type { CreateOrderInput, Order, RazorpayCheckoutSession } from '../types';
+import type {
+  CreateOrderInput,
+  Order,
+  OrderPricing,
+  QuoteOrderInput,
+  RazorpayCheckoutSession,
+  RefundRecord,
+} from '../types';
 import type { RazorpayPaymentResponse } from './razorpayCheckout';
 
 const orderPath = (orderId: string) => `/orders/${encodeURIComponent(orderId)}`;
@@ -15,6 +22,27 @@ export const createOrder = ({
   input: CreateOrderInput;
   idempotencyKey: string;
 }) => httpClient.post<Order>('/orders', input, { 'Idempotency-Key': idempotencyKey });
+
+/** Server-computed totals, including the first-order discount and points. */
+export const quoteOrder = (input: QuoteOrderInput) =>
+  httpClient.post<OrderPricing>('/orders/quote', input);
+
+/** Customer (own order) or admin, before shipping. Paid orders are refunded automatically. */
+export const cancelOrder = (orderId: string) =>
+  httpClient.post<Order>(`${orderPath(orderId)}/cancel`);
+
+/** Admin only. */
+export const shipOrder = (orderId: string) => httpClient.put<Order>(`${orderPath(orderId)}/ship`);
+
+/** Admin only. Full refund; before shipping it also cancels the order. */
+export const refundOrder = (orderId: string) =>
+  httpClient.post<Order>(`${orderPath(orderId)}/refund`);
+
+/** Admin only. */
+export const retryRefund = ({ orderId, paymentId }: { orderId: string; paymentId: string }) =>
+  httpClient.post<RefundRecord>(
+    `${orderPath(orderId)}/refunds/${encodeURIComponent(paymentId)}/retry`,
+  );
 
 export const getOrder = (orderId: string, signal?: AbortSignal) =>
   httpClient.get<Order>(orderPath(orderId), signal);
