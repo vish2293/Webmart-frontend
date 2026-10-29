@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-white font-sans text-ink antialiased;
+  }
+
+  /* Black inner ring + yellow outline stays visible on both white and black surfaces. */
+  :focus-visible {
+    outline: 3px solid theme('colors.brand.400');
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px theme('colors.ink.DEFAULT');
+  }
+
+  ::selection {
+    @apply bg-brand-300 text-ink;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important; /* a11y: honour reduced motion over component styles */
+    transition-duration: 0.01ms !important;
+  }
+}
