@@ -46,8 +46,9 @@ function PaymentInProgress({ orderNumber }: { orderNumber: string }) {
         <Loader2 size={28} className="mx-auto animate-spin text-ink" aria-hidden />
         <h1 className="mt-4 text-xl font-bold tracking-display text-ink">Complete your payment</h1>
         <p className="mt-2 text-sm text-graphite">
-          Order #{orderNumber} is placed. Finish paying in the Razorpay window. Please don&apos;t
-          close this tab.
+          Your items are held while you pay. Finish paying in the Razorpay window; the order is
+          confirmed once the payment succeeds. Please don&apos;t close this tab. (Ref #{orderNumber}
+          )
         </p>
       </div>
     </div>

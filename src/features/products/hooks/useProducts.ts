@@ -12,6 +12,7 @@ import type { Product, ProductFilters, ProductInput } from '../types';
 export const productKeys = {
   all: ['products'] as const,
   list: (filters: ProductFilters) => [...productKeys.all, 'list', filters] as const,
+  suggest: (query: string) => [...productKeys.all, 'suggest', query] as const,
   detail: (productId: string) => [...productKeys.all, 'detail', productId] as const,
 };
 
@@ -20,6 +21,16 @@ export function useProducts(filters: ProductFilters = {}) {
     queryKey: productKeys.list(filters),
     queryFn: ({ signal }) => productsApi.getProducts(filters, signal),
     placeholderData: keepPreviousData,
+  });
+}
+
+/** Search-box suggestions and the "did you mean" correction for a phrase. */
+export function useProductSuggestions(query: string, { enabled }: { enabled: boolean }) {
+  return useQuery({
+    queryKey: productKeys.suggest(query),
+    queryFn: ({ signal }) => productsApi.suggestProducts(query, signal),
+    enabled: enabled && query.length > 0,
+    staleTime: 30_000,
   });
 }
 

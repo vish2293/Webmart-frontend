@@ -1,10 +1,12 @@
+import { useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
-import { ArrowLeft, CreditCard, IndianRupee, ShoppingBag, Truck } from 'lucide-react';
+import { ArrowLeft, Banknote, CreditCard, IndianRupee, ShoppingBag, Truck } from 'lucide-react';
 import { Alert } from '@/components/feedback/Alert';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { LoadingState } from '@/components/feedback/LoadingState';
 import { Button } from '@/components/ui/Button';
 import { ButtonLink } from '@/components/ui/ButtonLink';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { PriceSummary } from '@/components/ui/PriceSummary';
 import { useAuth } from '@/features/auth';
 import { ApiError, getErrorMessage } from '@/lib/httpClient';
@@ -12,10 +14,11 @@ import { OrderActions } from '../components/OrderActions';
 import { OrderItemsList } from '../components/OrderItemsList';
 import { OrderSection } from '../components/OrderSection';
 import { PaymentDetails } from '../components/PaymentDetails';
+import { PaymentHold } from '../components/PaymentHold';
 import { CancelledBadge, RefundedBadge, StatusBadge } from '../components/StatusBadge';
 import { formatCurrency } from '@/utils/formatCurrency';
 import { formatDate } from '@/utils/formatDate';
-import { useOrder, useRazorpayPayment } from '../hooks/useOrders';
+import { useOrder, useRazorpayPayment, useSwitchToCashOnDelivery } from '../hooks/useOrders';
 import type { CancelReason, CheckoutOutcome, Order } from '../types';
 
 const cancelledMessages: Record<CancelReason, string> = {
@@ -96,8 +99,10 @@ function CheckoutOutcomeAlert({ outcome, order }: { outcome: CheckoutOutcome; or
   if (order.isCancelled) return null;
   return (
     <Alert variant="error" className="mb-6">
-      {outcome.kind === 'paymentFailed' ? `${outcome.message} ` : 'Payment was not completed. '}
-      Your order is reserved — use the Pay button below to finish paying before it expires.
+      {outcome.kind === 'paymentFailed'
+        ? `${outcome.message} If any amount was deducted, it is refunded automatically. `
+        : 'Payment not completed, so nothing was charged. '}
+      Use Retry payment below to try again, or cancel the order.
     </Alert>
   );
 }
@@ -106,6 +111,8 @@ function OrderDetail({ order }: { order: Order }) {
   const checkoutOutcome = readCheckoutOutcome(useLocation().state);
   const { user, isAdmin } = useAuth();
   const razorpayPayment = useRazorpayPayment();
+  const switchToCod = useSwitchToCashOnDelivery();
+  const [isConfirmingCod, setIsConfirmingCod] = useState(false);
 
   const ownerId = typeof order.user === 'string' ? order.user : order.user?._id;
   const isCashOnDelivery = order.paymentMethod === 'Cash on Delivery';
@@ -114,8 +121,15 @@ function OrderDetail({ order }: { order: Order }) {
   // The server only lets the customer who placed the order pay for it.
   const isOwner = ownerId === user?._id;
   const canPayOnline = isOpen && !isCashOnDelivery && isOwner;
-  const actionError = razorpayPayment.error;
+  const actionError = razorpayPayment.error ?? switchToCod.error;
   const justPaid = razorpayPayment.data?.isPaid === true;
+  // The customer closed the Razorpay window on this page (the mutation resolves with null).
+  const dismissedHere = razorpayPayment.data === null;
+  const hasTriedPaying =
+    razorpayPayment.isError ||
+    dismissedHere ||
+    checkoutOutcome?.kind === 'paymentDismissed' ||
+    checkoutOutcome?.kind === 'paymentFailed';
   const { address, city, postalCode, country } = order.shippingAddress;
   const itemsPrice =
     order.itemsPrice ?? order.orderItems.reduce((sum, item) => sum + item.price * item.qty, 0);
@@ -137,7 +151,13 @@ function OrderDetail({ order }: { order: Order }) {
           {getErrorMessage(actionError)}
         </Alert>
       )}
-      {checkoutOutcome && !justPaid && !actionError && (
+      {dismissedHere && !actionError && (
+        <Alert variant="error" className="mb-6">
+          Payment not completed, so nothing was charged. Use Retry payment below to try again, or
+          cancel the order.
+        </Alert>
+      )}
+      {checkoutOutcome && !dismissedHere && !justPaid && !actionError && (
         <CheckoutOutcomeAlert outcome={checkoutOutcome} order={order} />
       )}
       {justPaid && (
@@ -145,6 +165,7 @@ function OrderDetail({ order }: { order: Order }) {
           Payment received. Thank you for your order!
         </Alert>
       )}
+      {canPayOnline && !justPaid && <PaymentHold createdAt={order.createdAt} />}
       {isCancelled && (
         <Alert variant="error" className="mb-6">
           {cancelledMessages[order.cancelReason ?? 'payment_expired']}
@@ -189,7 +210,7 @@ function OrderDetail({ order }: { order: Order }) {
               <StatusBadge
                 isDone={order.isPaid}
                 doneLabel="Paid on"
-                pendingLabel="Not paid"
+                pendingLabel={isCashOnDelivery ? 'Pay on delivery' : 'Payment pending'}
                 date={order.paidAt}
               />
             )}
@@ -244,7 +265,17 @@ function OrderDetail({ order }: { order: Order }) {
               }
               icon={<IndianRupee size={18} aria-hidden />}
             >
-              Pay {formatCurrency(order.totalPrice)}
+              {hasTriedPaying ? 'Retry payment' : 'Pay'} {formatCurrency(order.totalPrice)}
+            </Button>
+          )}
+          {canPayOnline && (
+            <Button
+              variant="secondary"
+              className="w-full"
+              onClick={() => setIsConfirmingCod(true)}
+              icon={<Banknote size={18} aria-hidden />}
+            >
+              Pay cash on delivery instead
             </Button>
           )}
           {isCashOnDelivery && isOpen && !isAdmin && (
@@ -254,6 +285,18 @@ function OrderDetail({ order }: { order: Order }) {
           )}
           <OrderActions order={order} viewer={{ isAdmin, isOwner }} />
         </PriceSummary>
+
+        <ConfirmDialog
+          isOpen={isConfirmingCod}
+          title="Pay cash on delivery?"
+          description="Your order stays as placed and you pay in cash when it arrives. You can't switch back to paying online afterwards."
+          confirmLabel="Pay on delivery"
+          isConfirming={switchToCod.isPending}
+          onCancel={() => setIsConfirmingCod(false)}
+          onConfirm={() =>
+            switchToCod.mutate(order._id, { onSettled: () => setIsConfirmingCod(false) })
+          }
+        />
       </div>
     </div>
   );

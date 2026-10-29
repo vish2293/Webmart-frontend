@@ -19,7 +19,7 @@ const styles = {
   compact: {
     box: 'h-9 text-sm',
     add: 'bg-ink px-5 text-white hover:bg-ink-700',
-    step: 'w-9',
+    step: 'w-8',
   },
 } as const;
 

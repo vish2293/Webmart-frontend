@@ -20,7 +20,9 @@ export function AppLayout() {
       <AnnouncementBar />
       <Header onOpenMobileNav={() => setIsMobileNavOpen(true)} />
       <MobileNav isOpen={isMobileNavOpen} onClose={() => setIsMobileNavOpen(false)} />
-      <main id="main-content" className="flex-1">
+      {/* min-w-0: a flex item won't shrink below its content, so one wide child (a scrolling
+          product row) would otherwise stretch the whole page and cause sideways scrolling. */}
+      <main id="main-content" className="min-w-0 flex-1">
         <Suspense fallback={<LoadingState />}>
           <Outlet />
         </Suspense>

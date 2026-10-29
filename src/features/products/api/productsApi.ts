@@ -1,5 +1,5 @@
 import { httpClient } from '@/lib/httpClient';
-import type { Product, ProductFilters, ProductInput } from '../types';
+import type { Product, ProductFilters, ProductInput, ProductSuggestions } from '../types';
 
 type ProductListResponse = { products: Product[]; page: number; pages: number };
 
@@ -16,6 +16,9 @@ export async function getProducts(filters: ProductFilters = {}, signal?: AbortSi
   );
   return response.products;
 }
+
+export const suggestProducts = (query: string, signal?: AbortSignal) =>
+  httpClient.get<ProductSuggestions>(`/products/suggest?q=${encodeURIComponent(query)}`, signal);
 
 export const getProduct = (productId: string, signal?: AbortSignal) =>
   httpClient.get<Product>(`/products/${encodeURIComponent(productId)}`, signal);

@@ -1,6 +1,7 @@
 export {
   useProducts,
   useProductCategories,
+  useProductSuggestions,
   useLatestProducts,
   useSaveProduct,
   useDeleteProduct,

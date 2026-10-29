@@ -7,6 +7,13 @@ export const login = (input: LoginInput) => httpClient.post<Session>('/users/log
 export const register = (input: RegisterInput) =>
   httpClient.post<Session>('/users/register', input);
 
+export const forgotPassword = (email: string) =>
+  httpClient.post<{ message: string }>('/users/forgot-password', { email });
+
+/** Signs the customer in with the new password. */
+export const resetPassword = (token: string, password: string) =>
+  httpClient.post<Session>('/users/reset-password', { token, password });
+
 export const getProfile = (signal?: AbortSignal) =>
   httpClient.get<UserProfile>('/users/profile', signal);
 

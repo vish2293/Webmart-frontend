@@ -48,6 +48,14 @@ export function useCancelOrder() {
   });
 }
 
+export function useSwitchToCashOnDelivery() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ordersApi.switchToCashOnDelivery,
+    onSettled: () => queryClient.invalidateQueries({ queryKey: orderKeys.all }),
+  });
+}
+
 export function useShipOrder() {
   const queryClient = useQueryClient();
   return useMutation({

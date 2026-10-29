@@ -73,7 +73,15 @@ export function OrdersTable({ orders, showCustomer = false, renderActions }: Ord
                 ) : order.isCancelled ? (
                   <CancelledBadge />
                 ) : (
-                  <StatusBadge isDone={order.isPaid} doneLabel="Paid" pendingLabel="Unpaid" />
+                  <StatusBadge
+                    isDone={order.isPaid}
+                    doneLabel="Paid"
+                    pendingLabel={
+                      order.paymentMethod === 'Cash on Delivery'
+                        ? 'Pay on delivery'
+                        : 'Payment pending'
+                    }
+                  />
                 )}
               </td>
               <td className="whitespace-nowrap px-4 py-3">

@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 type EmptyStateProps = {
   icon?: ReactNode;
   title: string;
-  description?: string;
+  description?: ReactNode;
   action?: ReactNode;
 };
 

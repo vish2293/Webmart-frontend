@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowUpDown, PackageSearch } from 'lucide-react';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorState } from '@/components/feedback/ErrorState';
@@ -9,7 +9,7 @@ import { getErrorMessage } from '@/lib/httpClient';
 import { ActiveFilters } from '../components/ActiveFilters';
 import { FiltersPanel } from '../components/FiltersPanel';
 import { ProductGrid } from '../components/ProductGrid';
-import { useProductCategories, useProducts } from '../hooks/useProducts';
+import { useProductCategories, useProductSuggestions, useProducts } from '../hooks/useProducts';
 import {
   applyClientFilters,
   isProductSort,
@@ -35,6 +35,11 @@ export default function ProductListPage() {
     sort: filters.sort,
   });
   const categories = useProductCategories();
+  const hasNoMatches = productsQuery.isSuccess && productsQuery.data.length === 0;
+  const correction = useProductSuggestions(filters.keyword, {
+    enabled: hasNoMatches && filters.keyword.length > 0,
+  });
+  const didYouMean = correction.data?.didYouMean;
   const products = productsQuery.data ? applyClientFilters(productsQuery.data, filters) : [];
   const updateFilters = (next: ListingFilters) => setSearchParams(toSearchParams(next));
 
@@ -53,7 +58,22 @@ export default function ProductListPage() {
         <EmptyState
           icon={<PackageSearch size={28} aria-hidden />}
           title="No products match these filters"
-          description="Remove a filter or try a different search."
+          description={
+            didYouMean ? (
+              <>
+                Did you mean{' '}
+                <Link
+                  to={`/products?q=${encodeURIComponent(didYouMean)}`}
+                  className="font-semibold text-ink underline underline-offset-2"
+                >
+                  {didYouMean}
+                </Link>
+                ?
+              </>
+            ) : (
+              'Remove a filter or try a different search.'
+            )
+          }
           action={
             <Button variant="secondary" onClick={() => setSearchParams(new URLSearchParams())}>
               Clear all filters
@@ -100,7 +120,8 @@ export default function ProductListPage() {
               >
                 {Object.entries(sortLabels).map(([value, label]) => (
                   <option key={value} value={value}>
-                    {label}
+                    {/* With a search phrase the default order is relevance, not date. */}
+                    {value === 'newest' && filters.keyword ? 'Best match' : label}
                   </option>
                 ))}
               </select>

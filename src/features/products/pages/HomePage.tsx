@@ -7,11 +7,16 @@ import { pricingRules } from '@/features/cart';
 import { getErrorMessage } from '@/lib/httpClient';
 import { formatCurrencyWhole } from '@/utils/formatCurrency';
 import { HeroCarousel, type HeroSlide } from '../components/HeroCarousel';
+import { OfferTiles } from '../components/home/OfferTiles';
+import { PlusBanner } from '../components/home/PlusBanner';
+import { ProductRail } from '../components/home/ProductRail';
+import { TrustStrip } from '../components/home/TrustStrip';
 import { ProductGrid } from '../components/ProductGrid';
 import { useProducts } from '../hooks/useProducts';
 import type { Product } from '../types';
 
 const newInCount = 8;
+const bestsellerCount = 10;
 
 const heroProductCount = 4;
 const spotlightSlideCount = 3;
@@ -129,11 +134,28 @@ export default function HomePage() {
 
   const products = productsQuery.data;
   const categories = summarizeCategories(products);
+  // Top rated among what's actually buyable, so the row never leads with a sold-out item.
+  const bestsellers = products
+    .filter((product) => product.countInStock > 0 && product.reviews > 0)
+    .sort(byRating)
+    .slice(0, bestsellerCount);
 
   return (
     <>
       <HeroCarousel slides={buildHeroSlides(products)} />
+      <OfferTiles />
       <div className="container space-y-20 pt-16">
+        {bestsellers.length >= 4 && (
+          <section aria-labelledby="bestsellers-heading">
+            <SectionHeader
+              id="bestsellers-heading"
+              title="Bestsellers"
+              link={{ to: '/products', label: 'View all' }}
+            />
+            <ProductRail products={bestsellers} label="Bestsellers" />
+          </section>
+        )}
+
         <section aria-labelledby="new-in-heading">
           <SectionHeader
             id="new-in-heading"
@@ -186,6 +208,11 @@ export default function HomePage() {
             </ul>
           </section>
         )}
+
+        <PlusBanner />
+      </div>
+      <div className="mt-20">
+        <TrustStrip />
       </div>
     </>
   );

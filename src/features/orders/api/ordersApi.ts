@@ -60,6 +60,10 @@ export const startRazorpayPayment = (orderId: string) =>
 export const verifyRazorpayPayment = (orderId: string, response: RazorpayPaymentResponse) =>
   httpClient.post<Order>(`${orderPath(orderId)}/razorpay/verify`, response);
 
+/** Owner only: gives up on paying online and pays cash on delivery instead. */
+export const switchToCashOnDelivery = (orderId: string) =>
+  httpClient.post<Order>(`${orderPath(orderId)}/cash-on-delivery`);
+
 /** Admin only: confirms an offline (cash on delivery) payment. */
 export const markOrderPaid = (orderId: string) =>
   httpClient.put<Order>(`${orderPath(orderId)}/pay`);

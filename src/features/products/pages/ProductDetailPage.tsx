@@ -5,6 +5,7 @@ import { ButtonLink } from '@/components/ui/ButtonLink';
 import { ImageWithFallback } from '@/components/ui/ImageWithFallback';
 import { ApiError, getErrorMessage } from '@/lib/httpClient';
 import { formatCurrency } from '@/utils/formatCurrency';
+import { ReviewsSection } from '@/features/reviews';
 import { ProductGrid } from '../components/ProductGrid';
 import { RatingStars } from '../components/RatingStars';
 import { AddToCartControl } from '../components/AddToCartControl';
@@ -119,6 +120,8 @@ function ProductDetail({ product }: { product: Product }) {
           </div>
         </div>
       </article>
+
+      <ReviewsSection productId={product._id} average={product.rating} />
 
       <RelatedProducts product={product} />
     </div>

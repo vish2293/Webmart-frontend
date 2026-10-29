@@ -11,6 +11,8 @@ const ProductDetailPage = lazy(() => import('@/features/products/pages/ProductDe
 const CartPage = lazy(() => import('@/features/cart/pages/CartPage'));
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'));
 const RegisterPage = lazy(() => import('@/features/auth/pages/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('@/features/auth/pages/ResetPasswordPage'));
 const ProfilePage = lazy(() => import('@/features/auth/pages/ProfilePage'));
 const ShippingPage = lazy(() => import('@/features/checkout/pages/ShippingPage'));
 const PaymentPage = lazy(() => import('@/features/checkout/pages/PaymentPage'));
@@ -40,6 +42,8 @@ export const router = createBrowserRouter(
         { path: 'cart', element: <CartPage /> },
         { path: 'login', element: <LoginPage /> },
         { path: 'register', element: <RegisterPage /> },
+        { path: 'forgot-password', element: <ForgotPasswordPage /> },
+        { path: 'reset-password', element: <ResetPasswordPage /> },
         { path: 'plus', element: <PlusPage /> },
         { path: 'policies/:slug', element: <PolicyPage /> },
         { path: 'contact', element: <ContactPage /> },

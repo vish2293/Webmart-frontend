@@ -7,6 +7,7 @@ import { getErrorMessage } from '@/lib/httpClient';
 import type { Session } from '@/types/session';
 import * as authApi from '../api/authApi';
 import { FormCard } from '@/components/ui/FormCard';
+import { AddressBook } from '@/features/addresses';
 import { PointsCard } from '@/features/rewards';
 import { useAuth } from '../hooks/useAuth';
 import { hasErrors, validateAccountForm, type FieldErrors } from '../utils/validation';
@@ -27,6 +28,7 @@ export default function ProfilePage() {
   return (
     <>
       <ProfileForm currentUser={user} />
+      <AddressBook />
       <PointsCard />
     </>
   );

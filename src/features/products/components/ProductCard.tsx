@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Star } from 'lucide-react';
 import { ImageWithFallback } from '@/components/ui/ImageWithFallback';
-import { formatCurrency } from '@/utils/formatCurrency';
+import { formatCurrency, formatCurrencyWhole } from '@/utils/formatCurrency';
 import type { Product } from '../types';
 import { AddToCartControl } from './AddToCartControl';
 
@@ -62,9 +62,13 @@ export function ProductCard({ product }: { product: Product }) {
 
         {/* mt-auto pins the price row to the bottom so a row of cards lines up. */}
         <div className="mt-auto pt-3">
-          <div className="flex items-center justify-between gap-3 border-t border-line pt-3">
+          {/* Wraps instead of overflowing when a long price and the stepper don't fit side by side. */}
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-line pt-3">
             <p className="text-base font-bold tabular-nums text-ink">
-              {formatCurrency(product.price)}
+              {/* Whole rupees without ".00"; paise only when the price has them. */}
+              {Number.isInteger(product.price)
+                ? formatCurrencyWhole(product.price)
+                : formatCurrency(product.price)}
             </p>
             <AddToCartControl product={product} variant="compact" className="shrink-0" />
           </div>

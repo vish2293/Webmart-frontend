@@ -13,6 +13,13 @@ export type Product = {
   updatedAt: string;
 };
 
+/** GET /products/suggest */
+export type ProductSuggestions = {
+  suggestions: Pick<Product, '_id' | 'name' | 'category' | 'price' | 'imageUrl'>[];
+  /** A corrected phrase, only when the typed one matched nothing. */
+  didYouMean?: string;
+};
+
 /** Fields an admin can create or edit. */
 export type ProductInput = Pick<
   Product,
