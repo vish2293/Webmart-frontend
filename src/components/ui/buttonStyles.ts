@@ -5,11 +5,11 @@ const base =
   'inline-flex items-center justify-center gap-2 rounded-lg font-semibold whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-40';
 
 const variants: Record<ButtonVariant, string> = {
-  /** Brand CTA: volt fill, black text. One per view. */
+  /** Brand CTA: brand fill, black text. One per view. */
   primary: 'bg-brand-400 text-ink hover:bg-brand-500',
   /** Outlined, for secondary actions. */
   secondary: 'border border-line bg-white text-ink hover:border-ink',
-  /** Solid black, for strong actions next to (not instead of) the volt CTA. */
+  /** Solid black, for strong actions next to (not instead of) the brand CTA. */
   dark: 'bg-ink text-white hover:bg-ink-700',
   danger: 'bg-red-600 text-white hover:bg-red-700',
   success: 'bg-green-700 text-white hover:bg-green-800',

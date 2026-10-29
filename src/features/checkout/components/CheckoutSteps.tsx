@@ -3,7 +3,7 @@ import { Check } from 'lucide-react';
 const steps = ['Shipping', 'Payment', 'Review'] as const;
 export type CheckoutStep = (typeof steps)[number];
 
-/** Real sequence, so numbered; completed steps get the volt marker. */
+/** Real sequence, so numbered; completed steps get the brand marker. */
 export function CheckoutSteps({ current }: { current: CheckoutStep }) {
   const currentIndex = steps.indexOf(current);
 

@@ -24,7 +24,7 @@ export type HeroSlide = {
 
 const tones = {
   yellow: {
-    section: 'bg-brand-400 bg-[radial-gradient(circle_at_28%_45%,#FFE082_0%,transparent_55%)]',
+    section: 'bg-brand-400 bg-[radial-gradient(circle_at_28%_45%,#99F6E4_0%,transparent_55%)]',
     text: 'text-ink',
     dot: 'text-white',
     stage: 'bg-white/35',

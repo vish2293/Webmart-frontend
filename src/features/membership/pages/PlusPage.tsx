@@ -136,7 +136,7 @@ export default function PlusPage() {
   return (
     <div className="container max-w-3xl pt-8 sm:pt-10">
       <PageHeading description="Free delivery, faster shipping and more points on every order.">
-        Webvoltz Plus
+        WebMart Plus
       </PageHeading>
 
       {justJoined && (

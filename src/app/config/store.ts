@@ -2,8 +2,8 @@
 // ponytail: placeholder details — replace with the real business name, address and contacts
 // before going live (Razorpay checks these pages when activating live payments).
 export const storeInfo = {
-  name: 'Webvoltz Store',
-  legalName: 'Webvoltz Store (sample business name)',
+  name: 'WebMart',
+  legalName: 'WebMart (sample business name)',
   email: 'support@example.com',
   phone: '+91 00000 00000',
   phoneHref: 'tel:+910000000000',

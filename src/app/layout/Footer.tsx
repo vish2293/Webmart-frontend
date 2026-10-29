@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Instagram, Linkedin, ShieldCheck, Truck, Wallet } from 'lucide-react';
+import { ShieldCheck, Truck, Wallet } from 'lucide-react';
 import { storeInfo } from '@/app/config/store';
 import { Logo } from '@/components/ui/Logo';
 import { pricingRules } from '@/features/cart';
@@ -11,13 +11,6 @@ const currentYear = new Date().getFullYear();
 
 const linkClasses = 'text-sm text-ink/75 transition-colors hover:text-ink';
 const headingClasses = 'mb-4 text-[15px] font-semibold text-ink';
-
-// Official Webvoltz profiles, as linked from webvoltz.com.
-const socialLinks = [
-  { label: 'Instagram', href: 'https://www.instagram.com/webvoltzz/', Icon: Instagram },
-  { label: 'LinkedIn', href: 'https://www.linkedin.com/company/webvoltz/', Icon: Linkedin },
-  { label: 'Behance', href: 'https://www.behance.net/webvoltz', Icon: null },
-] as const;
 
 // Department of Telecommunications portal for reporting fraud calls and messages.
 const chakshuPortalUrl = 'https://sancharsaathi.gov.in/sfc/';
@@ -188,27 +181,6 @@ export function Footer() {
 
         <div className="flex flex-col items-center gap-4 border-t border-ink/15 py-10">
           <Logo className="h-6 w-auto" />
-          <ul className="flex items-center gap-2" aria-label="Webvoltz on social media">
-            {socialLinks.map(({ label, href, Icon }) => (
-              <li key={label}>
-                <a
-                  href={href}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label={`Webvoltz on ${label}`}
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-ink text-white transition-colors hover:bg-brand-500 hover:text-ink"
-                >
-                  {Icon ? (
-                    <Icon size={16} aria-hidden />
-                  ) : (
-                    <span aria-hidden className="text-[13px] font-bold tracking-tight">
-                      Bē
-                    </span>
-                  )}
-                </a>
-              </li>
-            ))}
-          </ul>
         </div>
       </div>
 

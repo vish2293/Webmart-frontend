@@ -51,10 +51,10 @@ export function useBuyMembership(payer: { name: string; email: string } | null) 
         order_id: session.razorpayOrderId,
         amount: session.amount,
         currency: session.currency,
-        name: 'Webvoltz Store',
+        name: 'WebMart',
         description: session.label,
         prefill: payer,
-        theme: { color: '#FFC107' },
+        theme: { color: '#2DD4BF' },
       });
       if (!response) return null;
 

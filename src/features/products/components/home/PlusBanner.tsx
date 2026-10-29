@@ -16,7 +16,7 @@ export function PlusBanner() {
       <div className="grid items-center gap-8 p-7 sm:p-10 lg:grid-cols-[1.2fr_1fr]">
         <div>
           <p className="inline-flex items-center gap-1.5 rounded-full bg-brand-400 px-3 py-1 text-xs font-bold text-ink">
-            <Crown size={13} aria-hidden /> Webvoltz Plus
+            <Crown size={13} aria-hidden /> WebMart Plus
           </p>
           <h2
             id="plus-banner-heading"

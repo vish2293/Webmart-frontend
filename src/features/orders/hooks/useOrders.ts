@@ -147,10 +147,10 @@ export function useRazorpayPayment() {
         order_id: session.razorpayOrderId,
         amount: session.amount,
         currency: session.currency,
-        name: 'Webvoltz Store',
+        name: 'WebMart',
         description: `Order #${orderId.slice(-8)}`,
         prefill: payer,
-        theme: { color: '#FFC107' },
+        theme: { color: '#2DD4BF' },
       });
       if (!response) return null;
 

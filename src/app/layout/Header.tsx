@@ -6,7 +6,7 @@ import { useCart } from '@/features/cart';
 import { HeaderSearch } from './HeaderSearch';
 import { visibleNavItems } from './navItems';
 
-// Active link is marked with the logo's volt dot rather than a filled pill.
+// Active link is marked with the logo's brand dot rather than a filled pill.
 const navLinkClasses = ({ isActive }: { isActive: boolean }) =>
   `relative px-3 py-2 text-sm font-medium transition-colors after:absolute after:bottom-0 after:left-1/2 after:h-1.5 after:w-1.5 after:-translate-x-1/2 after:rounded-full after:bg-brand-400 after:transition-opacity ${
     isActive ? 'text-ink after:opacity-100' : 'text-graphite hover:text-ink after:opacity-0'
@@ -36,7 +36,7 @@ export function Header({ onOpenMobileNav }: { onOpenMobileNav: () => void }) {
           <Menu size={20} aria-hidden />
         </button>
 
-        <Link to="/" className="shrink-0" aria-label="Webvoltz Store home">
+        <Link to="/" className="shrink-0" aria-label="WebMart home">
           <Logo className="h-[22px] w-auto" />
         </Link>
 

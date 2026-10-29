@@ -9,15 +9,15 @@ export default {
     },
     extend: {
       fontFamily: { sans: ['Montserrat', 'system-ui', 'sans-serif'] },
-      // Webvoltz brand tokens — change the palette here, not in components.
+      // WebMart brand tokens — change the palette here, not in components.
       colors: {
-        // "Volt": the yellow full stop in the logo. Fills and markers only — never text on white.
+        // Brand teal, also the full stop in the logo. Fills and markers only — never text on white.
         brand: {
-          50: '#FFF8E1',
-          100: '#FFECB3',
-          300: '#FFD54F',
-          400: '#FFC107',
-          500: '#F2B300',
+          50: '#F0FDFA',
+          100: '#CCFBF1',
+          300: '#5EEAD4',
+          400: '#2DD4BF',
+          500: '#14B8A6',
         },
         ink: { DEFAULT: '#000000', 800: '#18181B', 700: '#27272A' },
         graphite: '#52525B',
