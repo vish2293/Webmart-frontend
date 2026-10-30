@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Banknote, CreditCard, IndianRupee, ShoppingBag, Truck } from 'lucide-react';
 import { Alert } from '@/components/feedback/Alert';
 import { ErrorState } from '@/components/feedback/ErrorState';
@@ -18,7 +18,13 @@ import { PaymentHold } from '../components/PaymentHold';
 import { CancelledBadge, RefundedBadge, StatusBadge } from '../components/StatusBadge';
 import { formatCurrency } from '@/utils/formatCurrency';
 import { formatDate } from '@/utils/formatDate';
-import { useOrder, useRazorpayPayment, useSwitchToCashOnDelivery } from '../hooks/useOrders';
+import {
+  useOrder,
+  useRazorpayPayment,
+  useStripePayment,
+  useSwitchToCashOnDelivery,
+  useSyncStripePayment,
+} from '../hooks/useOrders';
 import type { CancelReason, CheckoutOutcome, Order } from '../types';
 
 const cancelledMessages: Record<CancelReason, string> = {
@@ -111,6 +117,10 @@ function OrderDetail({ order }: { order: Order }) {
   const checkoutOutcome = readCheckoutOutcome(useLocation().state);
   const { user, isAdmin } = useAuth();
   const razorpayPayment = useRazorpayPayment();
+  const stripePayment = useStripePayment();
+  const syncStripe = useSyncStripePayment();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const stripeReturn = searchParams.get('stripe');
   const switchToCod = useSwitchToCashOnDelivery();
   const [isConfirmingCod, setIsConfirmingCod] = useState(false);
 
@@ -121,15 +131,30 @@ function OrderDetail({ order }: { order: Order }) {
   // The server only lets the customer who placed the order pay for it.
   const isOwner = ownerId === user?._id;
   const canPayOnline = isOpen && !isCashOnDelivery && isOwner;
-  const actionError = razorpayPayment.error ?? switchToCod.error;
-  const justPaid = razorpayPayment.data?.isPaid === true;
+  const isStripeOrder = order.paymentMethod === 'Stripe';
+  const actionError =
+    razorpayPayment.error ?? stripePayment.error ?? syncStripe.error ?? switchToCod.error;
+  const justPaid = razorpayPayment.data?.isPaid === true || syncStripe.data?.isPaid === true;
   // The customer closed the Razorpay window on this page (the mutation resolves with null).
   const dismissedHere = razorpayPayment.data === null;
   const hasTriedPaying =
     razorpayPayment.isError ||
+    stripePayment.isError ||
+    stripeReturn === 'cancelled' ||
     dismissedHere ||
     checkoutOutcome?.kind === 'paymentDismissed' ||
     checkoutOutcome?.kind === 'paymentFailed';
+  // Stripe sends the customer back with ?stripe=success; confirm it with the server once, then
+  // drop the flag so a reload doesn't repeat it.
+  const hasSynced = useRef(false);
+  useEffect(() => {
+    if (stripeReturn !== 'success' || hasSynced.current) return;
+    hasSynced.current = true;
+    if (!order.isPaid) syncStripe.mutate(order._id);
+    setSearchParams({}, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once per return from Stripe
+  }, [stripeReturn]);
+
   const { address, city, postalCode, country } = order.shippingAddress;
   const itemsPrice =
     order.itemsPrice ?? order.orderItems.reduce((sum, item) => sum + item.price * item.qty, 0);
@@ -149,6 +174,17 @@ function OrderDetail({ order }: { order: Order }) {
       {actionError && (
         <Alert variant="error" className="mb-6">
           {getErrorMessage(actionError)}
+        </Alert>
+      )}
+      {syncStripe.isPending && (
+        <Alert variant="success" className="mb-6">
+          Confirming your payment with Stripe…
+        </Alert>
+      )}
+      {stripeReturn === 'cancelled' && !actionError && !order.isPaid && (
+        <Alert variant="error" className="mb-6">
+          Payment cancelled, so nothing was charged. Use Retry payment below to try again, or cancel
+          the order.
         </Alert>
       )}
       {dismissedHere && !actionError && (
@@ -249,6 +285,8 @@ function OrderDetail({ order }: { order: Order }) {
           taxPrice={order.taxPrice}
           totalPrice={order.totalPrice}
           firstOrderDiscount={order.firstOrderDiscount}
+          couponDiscount={order.couponDiscount}
+          couponCode={order.couponCode}
           pointsDiscount={order.pointsDiscount}
           pointsRedeemed={order.pointsRedeemed}
         >
@@ -256,12 +294,15 @@ function OrderDetail({ order }: { order: Order }) {
             <Button
               variant="success"
               className="w-full"
-              isLoading={razorpayPayment.isPending}
+              isLoading={razorpayPayment.isPending || stripePayment.isPending}
               onClick={() =>
-                razorpayPayment.mutate({
-                  orderId: order._id,
-                  payer: { name: user.name, email: user.email },
-                })
+                isStripeOrder
+                  ? stripePayment.mutate(order._id)
+                  : razorpayPayment.mutate({
+                      orderId: order._id,
+                      payer: { name: user.name, email: user.email },
+                      paymentMethod: order.paymentMethod,
+                    })
               }
               icon={<IndianRupee size={18} aria-hidden />}
             >

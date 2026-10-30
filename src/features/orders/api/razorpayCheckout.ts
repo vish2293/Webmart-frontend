@@ -16,6 +16,8 @@ type RazorpayOptions = {
   description?: string;
   prefill?: { name?: string; email?: string };
   theme?: { color?: string };
+  /** Which payment methods the window offers; leave out to show everything Razorpay supports. */
+  method?: Partial<Record<'upi' | 'card' | 'netbanking' | 'wallet' | 'emi' | 'paylater', boolean>>;
   /** Seconds until Razorpay closes the checkout window by itself. */
   timeout?: number;
   handler: (response: RazorpayPaymentResponse) => void;
@@ -29,6 +31,19 @@ declare global {
 }
 
 export type CheckoutOptions = Omit<RazorpayOptions, 'handler' | 'modal'>;
+
+/** Limits the Razorpay window to the one method the customer picked at checkout (UPI or Card). */
+export function restrictToMethod(method: string | undefined): CheckoutOptions['method'] {
+  if (method !== 'UPI' && method !== 'Card') return undefined;
+  return {
+    upi: method === 'UPI',
+    card: method === 'Card',
+    netbanking: false,
+    wallet: false,
+    emi: false,
+    paylater: false,
+  };
+}
 
 let scriptPromise: Promise<void> | null = null;
 

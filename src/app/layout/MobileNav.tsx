@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LogIn, LogOut, User, UserPlus, X } from 'lucide-react';
+import { Crown, LogIn, LogOut, User, UserPlus, X } from 'lucide-react';
 import { Logo } from '@/components/ui/Logo';
 import { useAuth } from '@/features/auth';
+import { useMembership } from '@/features/membership';
 import { visibleNavItems } from './navItems';
 
 type MobileNavProps = {
@@ -21,6 +22,7 @@ const linkClasses = ({ isActive }: { isActive: boolean }) =>
 export function MobileNav({ isOpen, onClose, onRequestLogout }: MobileNavProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const { user, isAuthenticated, isAdmin } = useAuth();
+  const isPlusMember = useMembership({ enabled: isAuthenticated }).data?.isMember === true;
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -66,7 +68,15 @@ export function MobileNav({ isOpen, onClose, onRequestLogout }: MobileNavProps) 
             {user.name.charAt(0).toUpperCase()}
           </span>
           <div className="min-w-0">
-            <p className="truncate font-medium">{user.name}</p>
+            <p className="flex items-center gap-2 font-medium">
+              <span className="truncate">{user.name}</span>
+              {isPlusMember && (
+                <span className="flex shrink-0 items-center gap-1 rounded-full bg-brand-400 px-2 py-0.5 text-[11px] font-bold text-ink">
+                  <Crown size={11} aria-hidden /> Plus
+                  <span className="sr-only"> member</span>
+                </span>
+              )}
+            </p>
             <p className="truncate text-sm text-slate-400">{user.email}</p>
           </div>
         </div>

@@ -8,7 +8,7 @@ import {
 import { rewardKeys } from '@/features/rewards';
 import { ApiError } from '@/lib/httpClient';
 import * as ordersApi from '../api/ordersApi';
-import { openRazorpayCheckout } from '../api/razorpayCheckout';
+import { openRazorpayCheckout, restrictToMethod } from '../api/razorpayCheckout';
 import type { QuoteOrderInput } from '../types';
 
 export const orderKeys = {
@@ -122,6 +122,8 @@ const checkoutSafetyMarginSeconds = 60;
 type RazorpayPaymentInput = {
   orderId: string;
   payer: { name: string; email: string };
+  /** The order's payment method; UPI or Card limits the window to that method. */
+  paymentMethod?: string;
 };
 
 /**
@@ -131,7 +133,7 @@ type RazorpayPaymentInput = {
 export function useRazorpayPayment() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ orderId, payer }: RazorpayPaymentInput) => {
+    mutationFn: async ({ orderId, payer, paymentMethod }: RazorpayPaymentInput) => {
       const session = await ordersApi.startRazorpayPayment(orderId);
       const secondsLeft =
         Math.floor((Date.parse(session.expiresAt) - Date.now()) / 1000) -
@@ -150,6 +152,7 @@ export function useRazorpayPayment() {
         name: 'WebMart',
         description: `Order #${orderId.slice(-8)}`,
         prefill: payer,
+        method: restrictToMethod(paymentMethod),
         theme: { color: '#2DD4BF' },
       });
       if (!response) return null;
@@ -165,6 +168,40 @@ export function useRazorpayPayment() {
         );
       }
     },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: orderKeys.all }),
+  });
+}
+
+/** Whether the server can take Stripe payments; checkout hides the option when it can't. */
+export function usePaymentOptions() {
+  return useQuery({
+    queryKey: [...orderKeys.all, 'payment-options'] as const,
+    queryFn: ({ signal }) => ordersApi.getPaymentOptions(signal),
+    staleTime: 10 * 60_000,
+  });
+}
+
+/**
+ * Starts the Stripe payment and sends the browser to Stripe's hosted page. The promise only
+ * settles on failure: on success the page navigates away, and the order page confirms the result
+ * when Stripe sends the customer back.
+ */
+export function useStripePayment() {
+  return useMutation({
+    mutationFn: async (orderId: string) => {
+      const session = await ordersApi.startStripePayment(orderId);
+      window.location.assign(session.url);
+      // Keep the button busy until the browser has actually left.
+      return new Promise<never>(() => undefined);
+    },
+  });
+}
+
+/** Run once when Stripe returns the customer: confirms the payment with the server. */
+export function useSyncStripePayment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ordersApi.syncStripePayment,
     onSettled: () => queryClient.invalidateQueries({ queryKey: orderKeys.all }),
   });
 }

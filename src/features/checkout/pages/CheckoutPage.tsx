@@ -10,7 +10,9 @@ import {
   OrderItemsList,
   useCreateOrder,
   useOrderQuote,
+  usePaymentOptions,
   useRazorpayPayment,
+  useStripePayment,
   type CheckoutOutcome,
   type DeliveryOption,
   type OrderPricing,
@@ -24,6 +26,7 @@ import { getErrorMessage } from '@/lib/httpClient';
 import { formatCurrency } from '@/utils/formatCurrency';
 import { CheckoutStepCard, type StepState } from '../components/CheckoutStepCard';
 import { PaymentStep } from '../components/PaymentStep';
+import { CouponField } from '../components/CouponField';
 import { PointsRedeemer } from '../components/PointsRedeemer';
 import { ShippingStep } from '../components/ShippingStep';
 import { StockConflictNotice } from '../components/StockConflictNotice';
@@ -39,32 +42,40 @@ import { readStockConflict } from '../utils/stockConflict';
 
 type Step = 'shipping' | 'payment' | 'review';
 
-/** Shown while the Razorpay window is open, so the page behind it isn't blank. */
-function PaymentInProgress({ orderNumber }: Readonly<{ orderNumber: string }>) {
+/** Shown while a payment window opens (Razorpay) or the browser leaves (Stripe), so the page isn't blank. */
+function PaymentInProgress({
+  orderNumber,
+  isStripe,
+}: Readonly<{ orderNumber: string; isStripe: boolean }>) {
   return (
     <div className="container flex min-h-[50vh] items-center justify-center py-16">
       <div role="status" className="max-w-sm text-center">
         <Loader2 size={28} className="mx-auto animate-spin text-ink" aria-hidden />
         <h1 className="mt-4 text-xl font-bold tracking-display text-ink">Complete your payment</h1>
         <p className="mt-2 text-sm text-graphite">
-          Your items are held while you pay. Finish paying in the Razorpay window; the order is
-          confirmed once the payment succeeds. Please don&apos;t close this tab. (Ref #{orderNumber}
-          )
+          {isStripe
+            ? 'Taking you to Stripe’s secure payment page. Your items are held while you pay.'
+            : 'Your items are held while you pay. Finish paying in the Razorpay window; the order is confirmed once the payment succeeds. Please don’t close this tab.'}{' '}
+          (Ref #{orderNumber})
         </p>
       </div>
     </div>
   );
 }
 
-/** Orders saved by the old checkout may say UPI or Card; both are paid through Razorpay. */
+const offeredMethods: readonly PaymentMethod[] = ['UPI', 'Card', 'Stripe', 'Cash on Delivery'];
+
+/** A choice saved by an older checkout (e.g. the combined "Razorpay") is dropped so it asks again. */
 const normalizeMethod = (method: PaymentMethod | null): PaymentMethod | null =>
-  method === null || method === 'Cash on Delivery' ? method : 'Razorpay';
+  method !== null && offeredMethods.includes(method) ? method : null;
 
 export default function CheckoutPage() {
   const { items, clearCart } = useCart();
   const navigate = useNavigate();
   const createOrder = useCreateOrder();
   const razorpayPayment = useRazorpayPayment();
+  const stripePayment = useStripePayment();
+  const paymentOptions = usePaymentOptions();
   const { user } = useAuth();
   const { isChecking, notices } = useFreshCart();
   const rewards = useRewards({ enabled: Boolean(user) });
@@ -72,14 +83,24 @@ export default function CheckoutPage() {
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress | null>(
     getShippingAddress,
   );
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(() =>
+  const [chosenMethod, setPaymentMethod] = useState<PaymentMethod | null>(() =>
     normalizeMethod(getPaymentMethod()),
   );
+  const isStripeAvailable = paymentOptions.data?.stripe === true;
+  // A remembered Stripe choice is dropped if the server can't take Stripe, so it asks again.
+  const paymentMethod =
+    chosenMethod === 'Stripe' && paymentOptions.data && !isStripeAvailable ? null : chosenMethod;
   const [deliveryOption, setDeliveryOption] = useState<DeliveryOption>('standard');
   const [isUsingPoints, setIsUsingPoints] = useState(false);
+  // The code the customer entered; the quote says whether it applies and what it takes off.
+  const [couponCode, setCouponCode] = useState<string | undefined>();
   // Start at the first step that still needs an answer.
   const [step, setStep] = useState<Step>(() =>
-    !getShippingAddress() ? 'shipping' : !getPaymentMethod() ? 'payment' : 'review',
+    !getShippingAddress()
+      ? 'shipping'
+      : !normalizeMethod(getPaymentMethod())
+        ? 'payment'
+        : 'review',
   );
 
   // Ask for the whole balance; the server caps it to what this order allows and the quote says
@@ -88,6 +109,7 @@ export default function CheckoutPage() {
     orderItems: items.map((item) => ({ product: item.productId, qty: item.quantity })),
     pointsToRedeem: isUsingPoints ? (rewards.data?.pointsBalance ?? 0) : 0,
     deliveryOption,
+    ...(couponCode && { couponCode }),
   };
   const quote = useOrderQuote(quoteInput, { enabled: items.length > 0 && !isChecking });
   const isQuoteCurrent = quote.isSuccess && !quote.isFetching;
@@ -100,13 +122,19 @@ export default function CheckoutPage() {
     paymentMethod,
     quoteInput.pointsToRedeem,
     deliveryOption,
+    couponCode,
   ]);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- new key whenever the order changes
   const idempotencyKey = useMemo(() => crypto.randomUUID(), [orderSignature]);
 
   // Once placed, the cart empties; don't let the guards below bounce the user to /cart.
   if (createOrder.isSuccess) {
-    return <PaymentInProgress orderNumber={createOrder.data._id.slice(-8)} />;
+    return (
+      <PaymentInProgress
+        orderNumber={createOrder.data._id.slice(-8)}
+        isStripe={createOrder.data.paymentMethod === 'Stripe'}
+      />
+    );
   }
   // Lost a race for the last units: the failed order refetches stock and the cart drops what
   // sold out. Explain that here instead of silently bouncing an emptied cart to /cart.
@@ -130,6 +158,7 @@ export default function CheckoutPage() {
     memberBenefitsApplied: false,
     pointsMultiplier: 1,
     firstOrderDiscount: 0,
+    couponDiscount: 0,
     pointsRedeemed: 0,
     pointsDiscount: 0,
     maxRedeemablePoints: 0,
@@ -147,11 +176,26 @@ export default function CheckoutPage() {
   const showOrder = (orderId: string, outcome: CheckoutOutcome) =>
     navigate(`/orders/${orderId}`, { replace: true, state: { checkoutOutcome: outcome } });
 
+  /** Sends the browser to Stripe's page for a just-created order. */
+  const payWithStripe = (orderId: string) =>
+    stripePayment.mutate(orderId, {
+      onError: (error) =>
+        showOrder(orderId, {
+          kind: 'paymentFailed',
+          message: getErrorMessage(error, 'We could not open Stripe.'),
+        }),
+    });
+
   /** Opens Razorpay for a just-created order, then shows the order with the result. */
   const payOnline = (orderId: string) => {
+    if (paymentMethod === 'Stripe') return payWithStripe(orderId);
     if (!user) return showOrder(orderId, { kind: 'paymentDismissed' });
     razorpayPayment.mutate(
-      { orderId, payer: { name: user.name, email: user.email } },
+      {
+        orderId,
+        payer: { name: user.name, email: user.email },
+        paymentMethod: paymentMethod ?? undefined,
+      },
       {
         onSuccess: (paidOrder) =>
           showOrder(orderId, { kind: paidOrder ? 'paid' : 'paymentDismissed' }),
@@ -174,6 +218,8 @@ export default function CheckoutPage() {
           shippingAddress,
           paymentMethod,
           deliveryOption,
+          // Only a code the quote accepted; an order with a rejected one would be refused.
+          ...(pricing.couponCode && { couponCode: pricing.couponCode }),
           pointsToRedeem: pricing.pointsRedeemed,
           // The server rejects the order if its total differs from the quote shown here.
           totalPrice: pricing.totalPrice,
@@ -253,7 +299,13 @@ export default function CheckoutPage() {
             summary={
               paymentMethod &&
               `${deliveryOption === 'express' ? 'Express' : 'Standard'} delivery · ${
-                paymentMethod === 'Cash on Delivery' ? 'Cash on delivery' : 'Pay online'
+                paymentMethod === 'Cash on Delivery'
+                  ? 'Cash on delivery'
+                  : paymentMethod === 'Stripe'
+                    ? 'Card with Stripe'
+                    : paymentMethod === 'UPI'
+                      ? 'UPI'
+                      : 'Card with Razorpay'
               }`
             }
           >
@@ -263,6 +315,7 @@ export default function CheckoutPage() {
               deliveryOption={deliveryOption}
               onDeliveryOptionChange={setDeliveryOption}
               isMember={pricing.memberBenefitsApplied}
+              isStripeAvailable={isStripeAvailable}
               onContinue={() => {
                 if (!paymentMethod) return;
                 savePaymentMethod(paymentMethod);
@@ -290,6 +343,18 @@ export default function CheckoutPage() {
               Join Plus: free shipping, free express delivery and 2× points on every order.
             </PlusNudge>
           )}
+          <CouponField
+            // Re-created when the code changes, so the field starts empty after a removal.
+            key={pricing.couponCode ?? 'none'}
+            {...(pricing.couponCode && {
+              applied: { code: pricing.couponCode, discount: pricing.couponDiscount ?? 0 },
+            })}
+            {...(quote.data?.couponError && { error: quote.data.couponError })}
+            isChecking={Boolean(couponCode) && quote.isFetching}
+            onApply={setCouponCode}
+            onRemove={() => setCouponCode(undefined)}
+            disabled={createOrder.isPending}
+          />
           {rewards.data && (
             <PointsRedeemer
               balance={rewards.data.pointsBalance}
@@ -323,7 +388,9 @@ export default function CheckoutPage() {
           </Button>
           {isReady && step === 'review' && isOnlinePayment && (
             <p className="text-center text-xs text-graphite">
-              Razorpay opens next to securely complete your payment.
+              {paymentMethod === 'Stripe'
+                ? 'You will be taken to Stripe to securely complete your payment.'
+                : `Razorpay opens next with ${paymentMethod === 'UPI' ? 'UPI' : 'card'} payment.`}
             </p>
           )}
           <p className="text-center text-xs leading-relaxed text-graphite">

@@ -11,6 +11,8 @@ type PriceSummaryProps = {
   totalPrice: number;
   /** Discount lines render only when greater than zero. */
   firstOrderDiscount?: number;
+  couponDiscount?: number;
+  couponCode?: string;
   pointsDiscount?: number;
   pointsRedeemed?: number;
   children?: ReactNode;
@@ -34,6 +36,8 @@ export function PriceSummary({
   taxPrice,
   totalPrice,
   firstOrderDiscount = 0,
+  couponDiscount = 0,
+  couponCode,
   pointsDiscount = 0,
   pointsRedeemed = 0,
   children,
@@ -48,6 +52,12 @@ export function PriceSummary({
         </div>
         {firstOrderDiscount > 0 && (
           <DiscountLine label="First-order discount" amount={firstOrderDiscount} />
+        )}
+        {couponDiscount > 0 && (
+          <DiscountLine
+            label={`Coupon${couponCode ? ` (${couponCode})` : ''}`}
+            amount={couponDiscount}
+          />
         )}
         {pointsDiscount > 0 && (
           <DiscountLine label={`Points used (${pointsRedeemed})`} amount={pointsDiscount} />

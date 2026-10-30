@@ -1,18 +1,30 @@
-import { ArrowRight, CreditCard, Wallet, type LucideIcon } from 'lucide-react';
+import { ArrowRight, CreditCard, Smartphone, Wallet, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import type { DeliveryOption, PaymentMethod } from '@/features/orders';
 import { DeliveryOptions } from './DeliveryOptions';
 
-const paymentOptions: {
+const allPaymentOptions: {
   value: PaymentMethod;
   label: string;
   detail: string;
   Icon: LucideIcon;
 }[] = [
   {
-    value: 'Razorpay',
-    label: 'Pay online',
-    detail: 'UPI, cards, net banking and wallets. Razorpay opens when you place the order.',
+    value: 'UPI',
+    label: 'UPI',
+    detail: 'Google Pay, PhonePe, Paytm and other UPI apps, through Razorpay.',
+    Icon: Smartphone,
+  },
+  {
+    value: 'Card',
+    label: 'Card with Razorpay',
+    detail: 'Credit or debit card, through Razorpay.',
+    Icon: CreditCard,
+  },
+  {
+    value: 'Stripe',
+    label: 'Card with Stripe',
+    detail: 'Credit or debit card on Stripe’s secure page.',
     Icon: CreditCard,
   },
   {
@@ -29,18 +41,24 @@ type PaymentStepProps = {
   deliveryOption: DeliveryOption;
   onDeliveryOptionChange: (option: DeliveryOption) => void;
   isMember: boolean;
+  /** Stripe is only offered when the server has it configured. */
+  isStripeAvailable: boolean;
   onContinue: () => void;
 };
 
-/** How fast it arrives, and how the customer pays: Razorpay or cash on delivery. */
+/** How fast it arrives, and how the customer pays: UPI or card (Razorpay), Stripe, or cash. */
 export function PaymentStep({
   paymentMethod,
   onPaymentMethodChange,
   deliveryOption,
   onDeliveryOptionChange,
   isMember,
+  isStripeAvailable,
   onContinue,
 }: Readonly<PaymentStepProps>) {
+  const paymentOptions = allPaymentOptions.filter(
+    (option) => option.value !== 'Stripe' || isStripeAvailable,
+  );
   return (
     <div className="space-y-6">
       <div>
@@ -54,13 +72,12 @@ export function PaymentStep({
 
       <fieldset>
         <legend className="mb-2 text-sm font-semibold text-ink">Payment</legend>
-        <div className="grid gap-3 md:grid-cols-2">
+        {/* One option per row: the checkout card is too narrow for three side by side. */}
+        <div className="grid gap-3">
           {paymentOptions.map(({ value, label, detail, Icon }) => (
-            // The label text sits three elements deep, past the rule's depth limit.
-            // eslint-disable-next-line jsx-a11y/label-has-associated-control
             <label
               key={value}
-              className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors ${
+              className={`flex cursor-pointer items-center gap-3 rounded-lg border p-4 transition-colors ${
                 paymentMethod === value ? 'border-ink bg-brand-50' : 'border-line hover:bg-mist'
               }`}
             >
@@ -70,13 +87,19 @@ export function PaymentStep({
                 value={value}
                 checked={paymentMethod === value}
                 onChange={() => onPaymentMethodChange(value)}
-                className="mt-1 h-4 w-4 accent-ink"
+                className="h-4 w-4 shrink-0 accent-ink"
               />
-              <span className="flex-1">
-                <span className="flex items-center gap-2 font-semibold text-ink">
-                  <Icon size={18} aria-hidden /> {label}
-                </span>
-                <span className="mt-1 block text-sm text-graphite">{detail}</span>
+              <span
+                aria-hidden
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
+                  paymentMethod === value ? 'bg-brand-400 text-ink' : 'bg-mist text-ink'
+                }`}
+              >
+                <Icon size={20} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-semibold text-ink">{label}</span>
+                <span className="mt-0.5 block text-sm text-graphite">{detail}</span>
               </span>
             </label>
           ))}

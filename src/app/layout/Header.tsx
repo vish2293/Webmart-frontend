@@ -1,8 +1,9 @@
 import { Link, NavLink } from 'react-router-dom';
-import { LogOut, Menu, ShoppingBag, User } from 'lucide-react';
+import { Crown, LogOut, Menu, ShoppingBag, User } from 'lucide-react';
 import { Logo } from '@/components/ui/Logo';
 import { useAuth } from '@/features/auth';
 import { useCart } from '@/features/cart';
+import { useMembership } from '@/features/membership';
 import { HeaderSearch } from './HeaderSearch';
 import { visibleNavItems } from './navItems';
 
@@ -18,7 +19,7 @@ const iconButtonClasses =
 // Separate from iconButtonClasses: combining `w-9` with `w-auto` lets `w-9` win in the
 // generated CSS, squeezing the name under the logout button.
 const profileLinkClasses =
-  'flex h-9 max-w-[160px] shrink-0 items-center gap-2 rounded-lg px-2.5 text-ink transition-colors hover:bg-mist';
+  'flex h-9 max-w-[220px] shrink-0 items-center gap-2 rounded-lg px-2.5 text-ink transition-colors hover:bg-mist';
 
 type HeaderProps = {
   onOpenMobileNav: () => void;
@@ -29,6 +30,7 @@ type HeaderProps = {
 export function Header({ onOpenMobileNav, onRequestLogout }: HeaderProps) {
   const { user, isAuthenticated, isAdmin } = useAuth();
   const { itemCount } = useCart();
+  const isPlusMember = useMembership({ enabled: isAuthenticated }).data?.isMember === true;
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-white/90 backdrop-blur-md">
@@ -76,6 +78,12 @@ export function Header({ onOpenMobileNav, onRequestLogout }: HeaderProps) {
               <Link to="/profile" className={profileLinkClasses} title="Your profile">
                 <User size={18} aria-hidden />
                 <span className="truncate text-sm font-medium">{user?.name.split(' ')[0]}</span>
+                {isPlusMember && (
+                  <span className="flex shrink-0 items-center gap-1 rounded-full bg-brand-400 px-2 py-0.5 text-[11px] font-bold text-ink">
+                    <Crown size={11} aria-hidden /> Plus
+                    <span className="sr-only"> member</span>
+                  </span>
+                )}
               </Link>
               <button
                 type="button"

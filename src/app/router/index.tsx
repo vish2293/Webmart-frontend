@@ -24,6 +24,7 @@ const AdminOrdersPage = lazy(() => import('@/features/admin/pages/AdminOrdersPag
 const SalesReportsPage = lazy(() => import('@/features/admin/pages/SalesReportsPage'));
 const WishlistPage = lazy(() => import('@/features/wishlist/pages/WishlistPage'));
 const PlusPage = lazy(() => import('@/features/membership/pages/PlusPage'));
+const ManageCouponsPage = lazy(() => import('@/features/admin/pages/ManageCouponsPage'));
 const ManageMembershipsPage = lazy(() => import('@/features/admin/pages/ManageMembershipsPage'));
 const PolicyPage = lazy(() => import('@/features/policies/pages/PolicyPage'));
 const ContactPage = lazy(() => import('@/features/policies/pages/ContactPage'));
@@ -67,6 +68,7 @@ export const router = createBrowserRouter(
             { path: 'users', element: <ManageUsersPage /> },
             { path: 'orders', element: <AdminOrdersPage /> },
             { path: 'memberships', element: <ManageMembershipsPage /> },
+            { path: 'coupons', element: <ManageCouponsPage /> },
             { path: 'reports', element: <SalesReportsPage /> },
           ],
         },

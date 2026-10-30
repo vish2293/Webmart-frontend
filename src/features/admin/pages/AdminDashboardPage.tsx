@@ -5,6 +5,7 @@ import {
   Crown,
   Package,
   ShoppingBag,
+  Tag,
   Users,
   type LucideIcon,
 } from 'lucide-react';
@@ -22,6 +23,12 @@ const adminSections: { to: string; title: string; description: string; Icon: Luc
     title: 'Memberships',
     description: 'See Plus members and refund memberships.',
     Icon: Crown,
+  },
+  {
+    to: '/admin/coupons',
+    title: 'Coupons',
+    description: 'Create discount codes and see how they are used.',
+    Icon: Tag,
   },
   {
     to: '/admin/products',

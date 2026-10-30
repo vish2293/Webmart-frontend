@@ -5,12 +5,19 @@ import type { AddressInput } from '../types';
 
 type Field = 'label' | 'address' | 'city' | 'postalCode' | 'country';
 
-const fields: { field: Field; label: string; autoComplete: string }[] = [
-  { field: 'label', label: 'Label (Home, Work…)', autoComplete: 'off' },
-  { field: 'address', label: 'Street address', autoComplete: 'street-address' },
-  { field: 'city', label: 'City', autoComplete: 'address-level2' },
-  { field: 'postalCode', label: 'Postal code', autoComplete: 'postal-code' },
-  { field: 'country', label: 'Country', autoComplete: 'country-name' },
+// `span` is the width on a six-column grid (medium screens and up): label + street share a row,
+// then city, postal code and country share the next.
+const fields: { field: Field; label: string; autoComplete: string; span: string }[] = [
+  { field: 'label', label: 'Label (Home, Work…)', autoComplete: 'off', span: 'md:col-span-2' },
+  {
+    field: 'address',
+    label: 'Street address',
+    autoComplete: 'street-address',
+    span: 'md:col-span-4',
+  },
+  { field: 'city', label: 'City', autoComplete: 'address-level2', span: 'md:col-span-2' },
+  { field: 'postalCode', label: 'Postal code', autoComplete: 'postal-code', span: 'md:col-span-2' },
+  { field: 'country', label: 'Country', autoComplete: 'country-name', span: 'md:col-span-2' },
 ];
 
 const emptyAddress: AddressInput = {
@@ -68,10 +75,11 @@ export function AddressForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3" noValidate>
-      {fields.map(({ field, label, autoComplete }) => (
+    <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-6" noValidate>
+      {fields.map(({ field, label, autoComplete, span }) => (
         <TextField
           key={field}
+          className={span}
           label={label}
           autoComplete={autoComplete}
           value={values[field]}
@@ -82,7 +90,7 @@ export function AddressForm({
           required
         />
       ))}
-      <label className="flex items-center gap-2 text-sm text-ink">
+      <label className="flex items-center gap-2 text-sm text-ink md:col-span-6">
         <input
           type="checkbox"
           checked={values.isDefault}
@@ -93,11 +101,11 @@ export function AddressForm({
         />
         Use as my default address
       </label>
-      <div className="flex gap-2 pt-1">
-        <Button type="submit" size="sm" isLoading={isSubmitting}>
+      <div className="flex gap-3 md:col-span-6">
+        <Button type="submit" isLoading={isSubmitting}>
           {submitLabel}
         </Button>
-        <Button variant="secondary" size="sm" onClick={onCancel} disabled={isSubmitting}>
+        <Button variant="secondary" onClick={onCancel} disabled={isSubmitting}>
           Cancel
         </Button>
       </div>

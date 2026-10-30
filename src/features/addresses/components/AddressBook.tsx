@@ -69,7 +69,7 @@ export function AddressBook() {
       )}
 
       {editing === 'new' && (
-        <div className="mt-4 rounded-lg border border-line p-4">
+        <div className="mt-4 rounded-lg border border-ink p-4 sm:p-5">
           <AddressForm
             submitLabel="Save address"
             isSubmitting={addAddress.isPending}
@@ -87,7 +87,13 @@ export function AddressBook() {
 
       <ul className="mt-4 grid gap-3 md:grid-cols-2">
         {list.map((saved) => (
-          <li key={saved._id} className="rounded-lg border border-line p-4 text-sm">
+          <li
+            key={saved._id}
+            // The edit form needs the whole row; a saved address only needs its own cell.
+            className={`rounded-lg border p-4 text-sm ${
+              editing === saved._id ? 'border-ink md:col-span-2' : 'border-line'
+            }`}
+          >
             {editing === saved._id ? (
               <AddressForm
                 initial={saved}

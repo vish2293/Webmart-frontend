@@ -3,9 +3,11 @@ import type {
   CreateOrderInput,
   Order,
   OrderPricing,
+  PaymentOptions,
   QuoteOrderInput,
   RazorpayCheckoutSession,
   RefundRecord,
+  StripeCheckoutSession,
 } from '../types';
 import type { RazorpayPaymentResponse } from './razorpayCheckout';
 
@@ -59,6 +61,17 @@ export const startRazorpayPayment = (orderId: string) =>
 
 export const verifyRazorpayPayment = (orderId: string, response: RazorpayPaymentResponse) =>
   httpClient.post<Order>(`${orderPath(orderId)}/razorpay/verify`, response);
+
+export const getPaymentOptions = (signal?: AbortSignal) =>
+  httpClient.get<PaymentOptions>('/orders/payment-options', signal);
+
+/** Creates (or reuses) the Stripe payment page for this order's server-calculated total. */
+export const startStripePayment = (orderId: string) =>
+  httpClient.post<StripeCheckoutSession>(`${orderPath(orderId)}/stripe`);
+
+/** After returning from Stripe: the server asks Stripe and marks the order paid if it was. */
+export const syncStripePayment = (orderId: string) =>
+  httpClient.post<Order>(`${orderPath(orderId)}/stripe/sync`);
 
 /** Owner only: gives up on paying online and pays cash on delivery instead. */
 export const switchToCashOnDelivery = (orderId: string) =>

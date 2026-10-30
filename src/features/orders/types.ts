@@ -6,7 +6,7 @@ export type ShippingAddress = {
 };
 
 // 'UPI' and 'Card' are kept for orders placed before checkout offered a single Razorpay option.
-export const paymentMethods = ['Razorpay', 'UPI', 'Card', 'Cash on Delivery'] as const;
+export const paymentMethods = ['Razorpay', 'Stripe', 'UPI', 'Card', 'Cash on Delivery'] as const;
 export type PaymentMethod = (typeof paymentMethods)[number];
 
 export const deliveryOptions = ['standard', 'express'] as const;
@@ -29,6 +29,8 @@ export type Order = {
   paymentMethod: PaymentMethod;
   itemsPrice?: number;
   firstOrderDiscount?: number;
+  couponCode?: string;
+  couponDiscount?: number;
   pointsRedeemed?: number;
   pointsDiscount?: number;
   /** Points credited once the order was paid and delivered. */
@@ -88,6 +90,11 @@ export type OrderPricing = {
   memberBenefitsApplied: boolean;
   pointsMultiplier: number;
   firstOrderDiscount: number;
+  /** The coupon applied to this order, and what it took off. */
+  couponCode?: string;
+  couponDiscount: number;
+  /** Quote only: why an entered coupon doesn't apply (the totals are then without it). */
+  couponError?: string;
   pointsRedeemed: number;
   pointsDiscount: number;
   /** Most points usable on this order with the customer's balance. */
@@ -100,7 +107,17 @@ export type QuoteOrderInput = {
   orderItems: { product: string; qty: number }[];
   pointsToRedeem: number;
   deliveryOption: DeliveryOption;
+  couponCode?: string;
 };
+
+/** Returned by POST /orders/:id/stripe: Stripe's hosted payment page for this order. */
+export type StripeCheckoutSession = {
+  url: string;
+  expiresAt: string;
+};
+
+/** GET /orders/payment-options: which online methods the server can take. */
+export type PaymentOptions = { stripe: boolean };
 
 /** Returned by POST /orders/:id/razorpay; `amount` is in paise. */
 export type RazorpayCheckoutSession = {
@@ -118,6 +135,7 @@ export type CreateOrderInput = {
   shippingAddress: ShippingAddress;
   paymentMethod: PaymentMethod;
   deliveryOption: DeliveryOption;
+  couponCode?: string;
   pointsToRedeem: number;
   totalPrice: number;
 };
