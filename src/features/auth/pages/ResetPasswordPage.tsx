@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { KeyRound } from 'lucide-react';
 import { Alert } from '@/components/feedback/Alert';
 import { Button } from '@/components/ui/Button';
-import { FormCard } from '@/components/ui/FormCard';
+import { AuthLayout } from '../components/AuthLayout';
 import { TextField } from '@/components/ui/TextField';
 import { ApiError, getErrorMessage } from '@/lib/httpClient';
 import * as authApi from '../api/authApi';
@@ -24,7 +24,7 @@ export default function ResetPasswordPage() {
 
   if (isLinkInvalid) {
     return (
-      <FormCard
+      <AuthLayout
         title="This link has expired"
         footer={
           <Link
@@ -38,7 +38,7 @@ export default function ResetPasswordPage() {
         <p className="text-sm text-graphite">
           Reset links work for 60 minutes and only once. Request a new one to choose a new password.
         </p>
-      </FormCard>
+      </AuthLayout>
     );
   }
 
@@ -69,7 +69,7 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <FormCard title="Choose a new password" description="You'll be logged in once it's saved.">
+    <AuthLayout title="Choose a new password" description="You'll be logged in once it's saved.">
       {error && (
         <Alert variant="error" className="mb-4">
           {error}
@@ -102,6 +102,6 @@ export default function ResetPasswordPage() {
           {isSubmitting ? 'Saving…' : 'Save new password'}
         </Button>
       </form>
-    </FormCard>
+    </AuthLayout>
   );
 }

@@ -20,8 +20,14 @@ const iconButtonClasses =
 const profileLinkClasses =
   'flex h-9 max-w-[160px] shrink-0 items-center gap-2 rounded-lg px-2.5 text-ink transition-colors hover:bg-mist';
 
-export function Header({ onOpenMobileNav }: { onOpenMobileNav: () => void }) {
-  const { user, isAuthenticated, isAdmin, logout } = useAuth();
+type HeaderProps = {
+  onOpenMobileNav: () => void;
+  /** Asks the layout to confirm before logging out. */
+  onRequestLogout: () => void;
+};
+
+export function Header({ onOpenMobileNav, onRequestLogout }: HeaderProps) {
+  const { user, isAuthenticated, isAdmin } = useAuth();
   const { itemCount } = useCart();
 
   return (
@@ -73,7 +79,7 @@ export function Header({ onOpenMobileNav }: { onOpenMobileNav: () => void }) {
               </Link>
               <button
                 type="button"
-                onClick={logout}
+                onClick={onRequestLogout}
                 className={iconButtonClasses}
                 aria-label="Log out"
                 title="Log out"

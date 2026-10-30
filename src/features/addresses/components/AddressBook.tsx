@@ -36,7 +36,7 @@ export function AddressBook() {
   const isBusy = setDefault.isPending || deleteAddress.isPending;
 
   return (
-    <Card aria-labelledby="addresses-heading" className="mx-auto mt-8 max-w-lg">
+    <Card aria-labelledby="addresses-heading">
       <div className="flex items-center justify-between gap-3">
         <h2
           id="addresses-heading"
@@ -85,7 +85,7 @@ export function AddressBook() {
         </p>
       )}
 
-      <ul className="mt-4 space-y-3">
+      <ul className="mt-4 grid gap-3 md:grid-cols-2">
         {list.map((saved) => (
           <li key={saved._id} className="rounded-lg border border-line p-4 text-sm">
             {editing === saved._id ? (

@@ -5,7 +5,7 @@ import { Alert } from '@/components/feedback/Alert';
 import { Button } from '@/components/ui/Button';
 import { TextField } from '@/components/ui/TextField';
 import { getErrorMessage } from '@/lib/httpClient';
-import { FormCard } from '@/components/ui/FormCard';
+import { AuthLayout } from '../components/AuthLayout';
 import { useAuth } from '../hooks/useAuth';
 import { getRedirectTarget } from '../utils/redirect';
 import {
@@ -53,7 +53,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <FormCard
+    <AuthLayout
       title="Create account"
       footer={
         <>
@@ -119,6 +119,6 @@ export default function RegisterPage() {
           {isSubmitting ? 'Creating account…' : 'Create account'}
         </Button>
       </form>
-    </FormCard>
+    </AuthLayout>
   );
 }

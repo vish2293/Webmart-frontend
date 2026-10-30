@@ -2,11 +2,11 @@ import { useState, type FormEvent } from 'react';
 import { Pencil, Save, X } from 'lucide-react';
 import { Alert } from '@/components/feedback/Alert';
 import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 import { TextField } from '@/components/ui/TextField';
 import { getErrorMessage } from '@/lib/httpClient';
 import type { Session } from '@/types/session';
 import * as authApi from '../api/authApi';
-import { FormCard } from '@/components/ui/FormCard';
 import { AddressBook } from '@/features/addresses';
 import { PointsCard } from '@/features/rewards';
 import { useAuth } from '../hooks/useAuth';
@@ -21,21 +21,32 @@ const formFromUser = (user: Pick<Session, 'name' | 'email'>) => ({
   confirmPassword: '',
 });
 
+/** "Vansh Patel" → "VP"; a single name gives one letter. */
+const getInitials = (name: string) =>
+  name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join('');
+
 export default function ProfilePage() {
   const { user } = useAuth();
   // The route guard redirects guests; this only covers the instant after logout.
   if (!user) return null;
   return (
-    <>
+    <div className="container grid items-start gap-6 py-8 sm:py-12 lg:grid-cols-[380px_1fr]">
       <ProfileForm currentUser={user} />
-      <AddressBook />
-      <PointsCard />
-    </>
+      <div className="space-y-6">
+        <AddressBook />
+        <PointsCard />
+      </div>
+    </div>
   );
 }
 
 function ProfileForm({ currentUser }: { currentUser: Session }) {
-  const { replaceSession, logout } = useAuth();
+  const { replaceSession } = useAuth();
 
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState(() => formFromUser(currentUser));
@@ -89,14 +100,25 @@ function ProfileForm({ currentUser }: { currentUser: Session }) {
   };
 
   return (
-    <FormCard
-      title="Your profile"
-      footer={
-        <Button variant="ghost" onClick={logout} className="text-red-600 hover:bg-red-50">
-          Log out
-        </Button>
-      }
-    >
+    <Card aria-labelledby="profile-heading" className="lg:sticky lg:top-24">
+      <div className="flex items-center gap-4">
+        <span
+          aria-hidden
+          className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-brand-400 text-xl font-bold text-ink"
+        >
+          {getInitials(currentUser.name)}
+        </span>
+        <div className="min-w-0 flex-1">
+          <h1 id="profile-heading" className="truncate text-xl font-bold tracking-display text-ink">
+            {currentUser.name}
+          </h1>
+          <p className="truncate text-sm text-graphite">{currentUser.email}</p>
+        </div>
+      </div>
+
+      <div className="mb-4 mt-6 flex items-center justify-between gap-3 border-t border-line pt-6">
+        <h2 className="text-base font-semibold text-ink">Account details</h2>
+      </div>
       {status && (
         <Alert variant={status.variant} className="mb-4">
           {status.message}
@@ -120,26 +142,36 @@ function ProfileForm({ currentUser }: { currentUser: Session }) {
           readOnly={!isEditing}
           error={fieldErrors.email}
         />
-        {isEditing && (
-          <>
-            <TextField
-              label="New password (optional)"
-              type="password"
-              autoComplete="new-password"
-              value={form.password}
-              onChange={(event) => updateField('password')(event.target.value)}
-              error={fieldErrors.password}
-            />
-            <TextField
-              label="Confirm new password"
-              type="password"
-              autoComplete="new-password"
-              value={form.confirmPassword}
-              onChange={(event) => updateField('confirmPassword')(event.target.value)}
-              error={fieldErrors.confirmPassword}
-            />
-          </>
-        )}
+        {/* Always mounted so the password fields can slide open (0fr → 1fr) instead of popping in;
+            disabled while closed keeps them out of the tab order. */}
+        <div
+          className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out motion-reduce:transition-none ${
+            isEditing ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+          }`}
+        >
+          <div className="min-h-0 overflow-hidden">
+            <div className="space-y-4 p-0.5">
+              <TextField
+                label="New password (optional)"
+                type="password"
+                autoComplete="new-password"
+                value={form.password}
+                onChange={(event) => updateField('password')(event.target.value)}
+                error={fieldErrors.password}
+                disabled={!isEditing}
+              />
+              <TextField
+                label="Confirm new password"
+                type="password"
+                autoComplete="new-password"
+                value={form.confirmPassword}
+                onChange={(event) => updateField('confirmPassword')(event.target.value)}
+                error={fieldErrors.confirmPassword}
+                disabled={!isEditing}
+              />
+            </div>
+          </div>
+        </div>
 
         <div className="flex flex-col justify-end gap-3 pt-2 sm:flex-row">
           {isEditing ? (
@@ -174,6 +206,6 @@ function ProfileForm({ currentUser }: { currentUser: Session }) {
           )}
         </div>
       </form>
-    </FormCard>
+    </Card>
   );
 }

@@ -45,10 +45,10 @@ const tones = {
  * neighbouring product.
  */
 const collageSlots = [
-  { box: 'left-[-2%] top-[30%] w-[38%] z-10', arrow: 'right', labelBelow: false },
-  { box: 'left-[28%] top-[-4%] w-[44%]', arrow: 'right', labelBelow: false },
-  { box: 'right-[-2%] top-[18%] w-[38%] z-10', arrow: 'left', labelBelow: false },
-  { box: 'right-[22%] top-[50%] w-[38%] z-20', arrow: 'left', labelBelow: true },
+  { box: 'left-[-2%] top-[30%] w-[38%] z-10', arrow: 'right', labelBelow: false, pull: '-mt-10' },
+  { box: 'left-[28%] top-[-4%] w-[44%]', arrow: 'right', labelBelow: false, pull: '-mt-8' },
+  { box: 'right-[-2%] top-[18%] w-[38%] z-10', arrow: 'left', labelBelow: false, pull: '-mt-3' },
+  { box: 'right-[22%] top-[50%] w-[38%] z-20', arrow: 'left', labelBelow: true, pull: '-mb-8' },
 ] as const;
 
 type CollageSlot = (typeof collageSlots)[number];
@@ -87,7 +87,7 @@ function CollageItem({
       tabIndex={isActive ? undefined : -1}
       className={`group absolute flex ${direction} ${align} ${slot.box}`}
     >
-      <span className={`flex ${direction} ${align}`}>
+      <span className={`relative z-10 flex ${direction} ${align}`}>
         <span className="max-w-[14ch] text-[12px] font-bold leading-tight sm:text-[13px]">
           {product.name}
         </span>
@@ -97,7 +97,9 @@ function CollageItem({
         src={product.imageUrl}
         alt=""
         loading="eager"
-        className="aspect-square w-full object-contain drop-shadow-[0_18px_24px_rgba(0,0,0,0.3)] transition-transform duration-500 group-hover:-translate-y-1 group-hover:scale-[1.03]"
+        // Natural height (not a square box) so wide or short products don't float below their
+        // callout inside transparent padding; the cap keeps tall ones inside the stage.
+        className={`h-auto max-h-44 w-full object-contain sm:max-h-56 lg:max-h-60 drop-shadow-[0_18px_24px_rgba(0,0,0,0.3)] transition-transform duration-500 group-hover:-translate-y-1 group-hover:scale-[1.03] ${slot.pull}`}
       />
     </Link>
   );
@@ -125,8 +127,12 @@ function Slide({
       aria-hidden={!isActive}
       // All slides share one grid cell so the tallest sets the height and they crossfade.
       // `invisible` also removes inactive slides from the tab order.
-      className={`[grid-area:1/1] transition-opacity duration-700 ${tone.section} ${tone.text} ${
-        isActive ? 'visible opacity-100' : 'invisible opacity-0'
+      // The incoming slide fades in on top; the outgoing one stays fully opaque underneath and
+      // only disappears (after the delay) once it is covered, so the page never shows through.
+      className={`[grid-area:1/1] motion-reduce:transition-none ${tone.section} ${tone.text} ${
+        isActive
+          ? 'visible relative z-10 opacity-100 transition-opacity duration-700 ease-in-out'
+          : 'invisible opacity-0 transition-[opacity,visibility] duration-0 delay-700'
       }`}
     >
       <div className="container grid items-center gap-8 pb-16 pt-12 sm:pt-14 lg:grid-cols-[1.1fr_1fr] lg:gap-12 lg:pb-20 lg:pt-16">

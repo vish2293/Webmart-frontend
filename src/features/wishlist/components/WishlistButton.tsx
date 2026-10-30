@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import { useAuth } from '@/features/auth';
 import type { Product } from '@/features/products';
+import { showToast } from '@/lib/toast';
 import { useToggleWishlist, useWishlist } from '../hooks/useWishlist';
 
 type WishlistButtonProps = {
@@ -24,7 +25,21 @@ export function WishlistButton({ product, variant = 'overlay' }: WishlistButtonP
       navigate('/login', { state: { from: location.pathname + location.search } });
       return;
     }
-    toggle.mutate({ product, isSaved });
+    toggle.mutate(
+      { product, isSaved },
+      {
+        // Only once the server confirms, so the toast never promises a save that failed.
+        onSuccess: () => {
+          if (!isSaved) {
+            showToast({
+              message: 'Added to wishlist',
+              detail: product.name,
+              action: { label: 'View wishlist', to: '/wishlist' },
+            });
+          }
+        },
+      },
+    );
   };
 
   const label = isSaved

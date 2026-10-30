@@ -5,6 +5,7 @@ import { ButtonLink } from '@/components/ui/ButtonLink';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { PageHeading } from '@/components/ui/PageHeading';
 import { PlusNudge } from '@/features/membership';
+import { RelatedProducts } from '@/features/products';
 import { PriceSummary } from '@/components/ui/PriceSummary';
 import { CartLineItem } from '../components/CartLineItem';
 import { useCart } from '../hooks/useCart';
@@ -70,7 +71,7 @@ export default function CartPage() {
             </p>
           )}
           <PlusNudge>Join Plus: free shipping, free express delivery and 2× points.</PlusNudge>
-          <ButtonLink to="/checkout/shipping" className="w-full">
+          <ButtonLink to="/checkout" className="w-full">
             Check out
           </ButtonLink>
           <ButtonLink to="/products" variant="ghost" className="w-full">
@@ -78,6 +79,8 @@ export default function CartPage() {
           </ButtonLink>
         </PriceSummary>
       </div>
+
+      <RelatedProducts productIds={items.map((item) => item.productId)} />
 
       <ConfirmDialog
         isOpen={isConfirmingClear}

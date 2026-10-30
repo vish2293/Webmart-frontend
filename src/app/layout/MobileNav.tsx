@@ -8,6 +8,8 @@ import { visibleNavItems } from './navItems';
 type MobileNavProps = {
   isOpen: boolean;
   onClose: () => void;
+  /** Asks the layout to confirm before logging out. */
+  onRequestLogout: () => void;
 };
 
 const linkClasses = ({ isActive }: { isActive: boolean }) =>
@@ -16,9 +18,9 @@ const linkClasses = ({ isActive }: { isActive: boolean }) =>
   }`;
 
 /** Slide-in drawer built on native <dialog> for focus trapping and Esc handling. */
-export function MobileNav({ isOpen, onClose }: MobileNavProps) {
+export function MobileNav({ isOpen, onClose, onRequestLogout }: MobileNavProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const { user, isAuthenticated, isAdmin, logout } = useAuth();
+  const { user, isAuthenticated, isAdmin } = useAuth();
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -88,8 +90,8 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
               type="button"
               className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[15px] font-medium text-zinc-300 hover:text-white hover:bg-ink-700"
               onClick={() => {
-                logout();
                 onClose();
+                onRequestLogout();
               }}
             >
               <LogOut size={20} aria-hidden />

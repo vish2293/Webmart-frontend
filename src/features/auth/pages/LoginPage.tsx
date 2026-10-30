@@ -5,7 +5,7 @@ import { Alert } from '@/components/feedback/Alert';
 import { Button } from '@/components/ui/Button';
 import { TextField } from '@/components/ui/TextField';
 import { getErrorMessage } from '@/lib/httpClient';
-import { FormCard } from '@/components/ui/FormCard';
+import { AuthLayout } from '../components/AuthLayout';
 import { useAuth } from '../hooks/useAuth';
 import { getRedirectTarget } from '../utils/redirect';
 
@@ -36,7 +36,7 @@ export default function LoginPage() {
   };
 
   return (
-    <FormCard
+    <AuthLayout
       title="Log in"
       footer={
         <>
@@ -91,6 +91,6 @@ export default function LoginPage() {
           {isSubmitting ? 'Logging in…' : 'Log in'}
         </Button>
       </form>
-    </FormCard>
+    </AuthLayout>
   );
 }

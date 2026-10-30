@@ -1,5 +1,5 @@
 import { lazy } from 'react';
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppLayout } from '../layout/AppLayout';
 import { RequireAdmin, RequireAuth } from './routeGuards';
 import { RouteErrorPage } from './RouteErrorPage';
@@ -14,9 +14,7 @@ const RegisterPage = lazy(() => import('@/features/auth/pages/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('@/features/auth/pages/ResetPasswordPage'));
 const ProfilePage = lazy(() => import('@/features/auth/pages/ProfilePage'));
-const ShippingPage = lazy(() => import('@/features/checkout/pages/ShippingPage'));
-const PaymentPage = lazy(() => import('@/features/checkout/pages/PaymentPage'));
-const PlaceOrderPage = lazy(() => import('@/features/checkout/pages/PlaceOrderPage'));
+const CheckoutPage = lazy(() => import('@/features/checkout/pages/CheckoutPage'));
 const OrderHistoryPage = lazy(() => import('@/features/orders/pages/OrderHistoryPage'));
 const OrderDetailPage = lazy(() => import('@/features/orders/pages/OrderDetailPage'));
 const AdminDashboardPage = lazy(() => import('@/features/admin/pages/AdminDashboardPage'));
@@ -52,9 +50,9 @@ export const router = createBrowserRouter(
           element: <RequireAuth />,
           children: [
             { path: 'profile', element: <ProfilePage /> },
-            { path: 'checkout/shipping', element: <ShippingPage /> },
-            { path: 'checkout/payment', element: <PaymentPage /> },
-            { path: 'checkout/review', element: <PlaceOrderPage /> },
+            { path: 'checkout', element: <CheckoutPage /> },
+            // The old three-page checkout's URLs (bookmarks, history) land on the single page.
+            { path: 'checkout/*', element: <Navigate to="/checkout" replace /> },
             { path: 'wishlist', element: <WishlistPage /> },
             { path: 'orders', element: <OrderHistoryPage /> },
             { path: 'orders/:orderId', element: <OrderDetailPage /> },

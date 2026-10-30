@@ -5,7 +5,8 @@ export type ShippingAddress = {
   country: string;
 };
 
-export const paymentMethods = ['UPI', 'Card', 'Cash on Delivery'] as const;
+// 'UPI' and 'Card' are kept for orders placed before checkout offered a single Razorpay option.
+export const paymentMethods = ['Razorpay', 'UPI', 'Card', 'Cash on Delivery'] as const;
 export type PaymentMethod = (typeof paymentMethods)[number];
 
 export const deliveryOptions = ['standard', 'express'] as const;

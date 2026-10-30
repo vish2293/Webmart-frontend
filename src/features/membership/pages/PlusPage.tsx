@@ -28,7 +28,7 @@ function MemberStatus({ membership }: { membership: MembershipSummary }) {
   const { current } = membership;
 
   return (
-    <Card aria-labelledby="status-heading" className="mb-8">
+    <Card aria-labelledby="status-heading">
       <h2 id="status-heading" className="flex items-center gap-2 text-lg font-semibold text-ink">
         <Crown size={20} aria-hidden /> You&apos;re a Plus member
       </h2>
@@ -96,18 +96,26 @@ function PlanCard({
 }) {
   const perMonth = Math.round(plan.price / (plan.durationDays / 30));
   return (
-    <Card className={isBestValue ? 'border-brand-400 ring-1 ring-brand-400' : ''}>
-      {isBestValue && (
-        <p className="mb-2 inline-block rounded-full bg-brand-400 px-2.5 py-0.5 text-xs font-semibold text-ink">
-          Best value
-        </p>
-      )}
+    <Card
+      className={`flex flex-col sm:p-7 ${isBestValue ? 'border-brand-400 ring-1 ring-brand-400' : ''}`}
+    >
+      {/* Same-height badge row on every card keeps titles and prices aligned side by side. */}
+      <div className="mb-3 h-6">
+        {isBestValue && (
+          <p className="inline-block rounded-full bg-brand-400 px-2.5 py-0.5 text-xs font-semibold text-ink">
+            Best value
+          </p>
+        )}
+      </div>
       <h3 className="text-lg font-semibold text-ink">{plan.label}</h3>
-      <p className="mt-2 text-3xl font-bold text-ink">{formatCurrency(plan.price)}</p>
-      <p className="text-sm text-graphite">
+      <p className="mt-2 text-4xl font-bold tracking-display text-ink">
+        {formatCurrency(plan.price)}
+      </p>
+      <p className="mt-1 text-sm text-graphite">
         for {plan.durationDays} days · about {formatCurrency(perMonth)} / month
       </p>
-      <div className="mt-5">{action}</div>
+      {/* mt-auto pushes the button to the card's bottom edge, whatever the content above. */}
+      <div className="mt-auto pt-6">{action}</div>
     </Card>
   );
 }
@@ -134,7 +142,7 @@ export default function PlusPage() {
   )[0]?.id;
 
   return (
-    <div className="container max-w-3xl pt-8 sm:pt-10">
+    <div className="container pb-12 pt-8 sm:pt-10">
       <PageHeading description="Free delivery, faster shipping and more points on every order.">
         WebMart Plus
       </PageHeading>
@@ -150,58 +158,72 @@ export default function PlusPage() {
           {getErrorMessage(buy.error, 'Could not complete your payment.')}
         </Alert>
       )}
-      {summary?.isMember && <MemberStatus membership={summary} />}
+      <div className="grid items-start gap-6 lg:grid-cols-[2fr_3fr] lg:gap-10">
+        <div className="space-y-6">
+          {summary?.isMember && <MemberStatus membership={summary} />}
 
-      <ul className="mb-8 space-y-2 rounded-xl border border-line bg-white p-5 text-[15px] text-ink">
-        {memberBenefits.map((benefit) => (
-          <li key={benefit} className="flex items-start gap-2">
-            <Check size={18} className="mt-0.5 shrink-0 text-green-700" aria-hidden />
-            {benefit}
-          </li>
-        ))}
-      </ul>
+          <section
+            aria-labelledby="benefits-heading"
+            className="rounded-xl border border-line bg-white p-5 sm:p-6"
+          >
+            <h2 id="benefits-heading" className="mb-4 text-lg font-semibold text-ink">
+              What you get
+            </h2>
+            <ul className="space-y-3 text-[15px] text-ink">
+              {memberBenefits.map((benefit) => (
+                <li key={benefit} className="flex items-start gap-2.5">
+                  <Check size={18} className="mt-0.5 shrink-0 text-green-700" aria-hidden />
+                  {benefit}
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
 
-      <h2 className="mb-3 text-lg font-semibold text-ink">
-        {summary?.isMember ? 'Renew your membership' : 'Choose a plan'}
-      </h2>
-      {!canBuy && (
-        <p className="mb-3 text-sm text-graphite">
-          You can renew in the last {membershipRules.renewalWindowDays} days of your membership.
-        </p>
-      )}
-      <div className="grid gap-4 sm:grid-cols-2">
-        {plans.data.map((plan) => (
-          <PlanCard
-            key={plan.id}
-            plan={plan}
-            isBestValue={plan.id === bestValueId}
-            action={
-              isAuthenticated ? (
-                <Button
-                  className="w-full"
-                  disabled={!canBuy}
-                  isLoading={buy.isPending && buy.variables === plan.id}
-                  onClick={() => buy.mutate(plan.id)}
-                  icon={<Crown size={16} aria-hidden />}
-                >
-                  {summary?.isMember ? 'Renew' : 'Join Plus'}
-                </Button>
-              ) : (
-                <ButtonLink to="/login" state={{ from: location.pathname }} className="w-full">
-                  Log in to join
-                </ButtonLink>
-              )
-            }
-          />
-        ))}
+        <section aria-labelledby="plans-heading">
+          <h2 id="plans-heading" className="mb-1 text-lg font-semibold text-ink">
+            {summary?.isMember ? 'Renew your membership' : 'Choose a plan'}
+          </h2>
+          {!canBuy && (
+            <p className="mb-3 text-sm text-graphite">
+              You can renew in the last {membershipRules.renewalWindowDays} days of your membership.
+            </p>
+          )}
+          <div className="mt-3 grid gap-4 sm:grid-cols-2">
+            {plans.data.map((plan) => (
+              <PlanCard
+                key={plan.id}
+                plan={plan}
+                isBestValue={plan.id === bestValueId}
+                action={
+                  isAuthenticated ? (
+                    <Button
+                      className="w-full"
+                      disabled={!canBuy}
+                      isLoading={buy.isPending && buy.variables === plan.id}
+                      onClick={() => buy.mutate(plan.id)}
+                      icon={<Crown size={16} aria-hidden />}
+                    >
+                      {summary?.isMember ? 'Renew' : 'Join Plus'}
+                    </Button>
+                  ) : (
+                    <ButtonLink to="/login" state={{ from: location.pathname }} className="w-full">
+                      Log in to join
+                    </ButtonLink>
+                  )
+                }
+              />
+            ))}
+          </div>
+          <p className="mt-4 text-xs text-graphite">
+            Memberships are prepaid for a fixed period and don&apos;t renew automatically. See the{' '}
+            <Link to="/policies/membership" className="underline underline-offset-2">
+              Plus terms
+            </Link>
+            .
+          </p>
+        </section>
       </div>
-      <p className="mt-4 text-xs text-graphite">
-        Memberships are prepaid for a fixed period and don&apos;t renew automatically. See the{' '}
-        <Link to="/policies/membership" className="underline underline-offset-2">
-          Plus terms
-        </Link>
-        .
-      </p>
     </div>
   );
 }
